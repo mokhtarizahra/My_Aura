@@ -1,11 +1,13 @@
+import dotenv from "dotenv";
+// Load environment variables
+dotenv.config();
+
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import { initSocket } from "./socket/socket.js";
-// import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import userRouters from "./routes/userRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
@@ -16,10 +18,7 @@ import serviceRoutes from "./routes/serviceRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 
-import authRoutes from "./routes/auth.routes.js";
-
-// Load environment variables
-dotenv.config();
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -44,13 +43,7 @@ app.use(
     credentials: true
   })
 );
-
 app.use(express.json());
-
-// Health check
-// app.get("/api/health", (req, res) => {
-//   res.json({ status: "ok", env: process.env.NODE_ENV });
-// });
 
 // Routes
 app.use("/api/auth", authRoutes);

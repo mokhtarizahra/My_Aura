@@ -31,9 +31,9 @@ const userSchema = new mongoose.Schema(
   },
 
   role: {
-    type: String,
-    enum: ["user", "admin"],
-    default: "user",
+     type: String,
+     enum: ["athlete", "sportsComplex_admin", "super_admin"],
+     default: "athlete",
   },
 
   status: {

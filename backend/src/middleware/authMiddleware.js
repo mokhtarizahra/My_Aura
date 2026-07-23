@@ -7,7 +7,7 @@ export const protect = async (req, res, next) => {
 
     const authHeader = req.headers.authorization;
 
-    if (authHeader && authHeader.startsWith("Bearer")) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       token = authHeader.split(" ")[1];
     }
 
@@ -20,6 +20,13 @@ export const protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    if (decoded.type !== "access") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token type"
+      });
+    }
+
     const user = await User.findById(decoded.sub);
 
     if (!user) {
@@ -31,6 +38,7 @@ export const protect = async (req, res, next) => {
 
     req.user = user;
     req.tokenType = decoded.type;
+    req.userRole = decoded.role; 
 
     next();
 
@@ -40,4 +48,24 @@ export const protect = async (req, res, next) => {
       message: "Invalid token"
     });
   }
+};
+
+export const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.userRole) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: No role found"
+      });
+    }
+
+    if (!roles.includes(req.userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied: Required roles: ${roles.join(", ")}`
+      });
+    }
+
+    next();
+  };
 };
