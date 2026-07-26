@@ -142,3 +142,4 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 frontend/node_modules.tar.gz
+docker_run.txt
