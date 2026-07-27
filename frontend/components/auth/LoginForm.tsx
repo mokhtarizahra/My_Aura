@@ -19,6 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import Link from 'next/link';
+import { ROUTES } from '@/constants/routes';
 import { UserRole } from '@/types/auth';
 
 // ─── Validation Schema ──────────────────────────────────────────────────────

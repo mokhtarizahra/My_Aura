@@ -14,6 +14,7 @@ describe('Utility: cn', () => {
     const result = cn(class1, class2, class3);
 
     // Assert
-    expect(result).toBe('font-bold text-blue-500');
+    // tailwind-merge مرتب‌سازی می‌کند و آخرین کلاس رنگ (text-blue-500) را نگه می‌دارد
+    expect(result).toBe('text-blue-500 font-bold');
   });
 });
