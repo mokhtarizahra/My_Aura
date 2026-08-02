@@ -16,7 +16,7 @@ describe('Utility: hashOTP & compareOTP', () => {
     expect(isMatch).toBe(true);
   });
 
-  it('it must return `false` for non-matching values', () => {
+  it('it must return `false` for non-matching values', async () => {
     // Arrange
     const plainOtp = '1234';
     const wrongOtp = '5678';

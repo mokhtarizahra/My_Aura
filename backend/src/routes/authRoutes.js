@@ -7,7 +7,8 @@ import {
   refreshAccessToken,
   logout,
   getSessions,
-  revokeSession
+  revokeSession,
+  resendOTP
 } from "../controllers/authController.js";
 
 import { protect, authorize } from "../middleware/authMiddleware.js";
@@ -20,6 +21,7 @@ router.post("/request-otp", otpLimiter, requestOTP);
 router.post("/verify-otp", otpLimiter, verifyOTP);
 router.post("/login", loginWithPassword);
 router.post("/refresh-token", refreshAccessToken);
+router.post("/resend-otp", otpLimiter, resendOTP); 
 
 // Protected routes (require login)
 router.post("/set-password", protect, setPassword);

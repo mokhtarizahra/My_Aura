@@ -310,3 +310,52 @@ export const revokeSession = async (req, res) => {
   res.json({ success: true });
 
 };
+
+// Resend OTP
+export const resendOTP = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "شماره موبایل الزامی است" 
+      });
+    }
+
+    // Check for user existence
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "کاربری با این شماره یافت نشد" 
+      });
+    }
+
+    // Check user status
+    if (user.status !== 'active') {
+      return res.status(403).json({ 
+        success: false, 
+        message: "حساب کاربری شما فعال نیست" 
+      });
+    }
+
+    // Send a new OTP (same as the sendOTP function)
+    await sendOTP(phone);
+
+    // Log for review (optional)
+    console.log(`OTP resent to ${phone} at ${new Date().toISOString()}`);
+
+    res.status(200).json({ 
+      success: true, 
+      message: "کد تأیید مجدداً ارسال شد" 
+    });
+
+  } catch (error) {
+    console.error('Error in resendOTP:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "خطا در ارسال مجدد کد تأیید" 
+    });
+  }
+};
