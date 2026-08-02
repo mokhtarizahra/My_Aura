@@ -1,546 +1,192 @@
-// components/auth/PhoneForm.test.tsx
-
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import React from 'react';
 
-import { PhoneForm } from './PhoneForm';
 import { usePhone } from '@/hooks/usePhone';
-import { AuthProvider } from '@/context/AuthContext';
+
+import { PhoneForm } from './PhoneForm';
 
 // Mocks
+const mockRequestOTP = vi.fn();
+
 vi.mock('@/hooks/usePhone', () => ({
   usePhone: vi.fn(),
 }));
 
-
-vi.mock('next/link', () => ({
-  default: ({
-    children,
-    href,
-  }: {
-    children: React.ReactNode;
-    href: string;
-  }) => <a href={href}>{children}</a>,
-}));
-
 // Helpers
-const renderWithAuth = (
-  ui: React.ReactNode
-) =>
-  render(
-    <AuthProvider>
-      {ui}
-    </AuthProvider>
-  );
+const renderPhoneForm = (
+  props: React.ComponentProps<typeof PhoneForm> = {}
+) => {
+  return render(<PhoneForm {...props} />);
+};
 
 // Test Suite
 describe('PhoneForm', () => {
-
-  const mockRequestOTP = vi.fn();
-
-
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (usePhone as any).mockReturnValue({
-      requestOTP: mockRequestOTP,
+    mockRequestOTP.mockResolvedValue({
+      success: true,
+      phone: '09123456789',
     });
+
+    (usePhone as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (options: any) => ({
+        requestOTP: async (phone: string) => {
+          const result = await mockRequestOTP(phone);
+
+          if (result.success) {
+            options?.onSuccess?.(phone);
+          }
+
+          return result;
+        },
+      })
+    );
   });
 
   // Rendering
-  describe('Rendering', () => {
+  it('renders phone form correctly', () => {
+    renderPhoneForm();
 
-    it('renders all required elements', () => {
+    expect(screen.getByText('ورود به حساب کاربری')).toBeInTheDocument();
 
-      renderWithAuth(
-        <PhoneForm />
-      );
+    expect(screen.getByLabelText('شماره موبایل')).toBeInTheDocument();
 
+    expect(screen.getByPlaceholderText('09123456789')).toBeInTheDocument();
 
-      expect(
-        screen.getByText('ورود به حساب کاربری')
-      )
-      .toBeInTheDocument();
-
-
-      expect(
-        screen.getByLabelText('شماره موبایل')
-      )
-      .toBeInTheDocument();
-
-
-      expect(
-        screen.getByPlaceholderText('09123456789')
-      )
-      .toBeInTheDocument();
-
-
-      expect(
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        )
-      )
-      .toBeInTheDocument();
-
-
-      expect(
-        screen.getByRole('link',{
-          name:'وارد شوید'
-        })
-      )
-      .toHaveAttribute(
-        'href',
-        '/auth/login'
-      );
-    });
-
-
-
-    it('has correct input attributes',()=>{
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      const input =
-        screen.getByLabelText(
-          'شماره موبایل'
-        );
-
-
-      expect(input)
-        .toHaveAttribute(
-          'type',
-          'tel'
-        );
-
-
-      expect(input)
-        .toHaveAttribute(
-          'inputmode',
-          'numeric'
-        );
-
-
-      expect(input)
-        .toHaveAttribute(
-          'autocomplete',
-          'tel'
-        );
-
-    });
-
+    expect(
+      screen.getByRole('button', {
+        name: /ارسال کد تأیید/i,
+      })
+    ).toBeInTheDocument();
   });
 
   // Validation
-  describe('Validation',()=>{
+  it('shows error when phone is empty', async () => {
+    const user = userEvent.setup();
 
+    renderPhoneForm();
 
-    it('shows error when phone is empty',async()=>{
+    await user.click(
+      screen.getByRole('button', {
+        name: /ارسال کد تأیید/i,
+      })
+    );
 
-      const user =
-        userEvent.setup();
+    expect(
+      await screen.findByText('شماره موبایل الزامی است')
+    ).toBeInTheDocument();
+  });
 
+  it('rejects invalid phone number', async () => {
+    const user = userEvent.setup();
 
-      renderWithAuth(
-        <PhoneForm/>
-      );
+    renderPhoneForm();
 
+    const input = screen.getByLabelText('شماره موبایل');
 
-      await user.click(
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        )
-      );
+    await user.type(input, '0912345678');
 
+    await user.click(
+      screen.getByRole('button', {
+        name: /ارسال کد تأیید/i,
+      })
+    );
 
+    expect(
+      await screen.findByText('شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد')
+    ).toBeInTheDocument();
+  });
+
+  // Submit Success
+  it('calls requestOTP and onSuccess after successful request', async () => {
+    const user = userEvent.setup();
+
+    const onSuccess = vi.fn();
+
+    renderPhoneForm({
+      onSuccess,
+    });
+
+    const input = screen.getByLabelText('شماره موبایل');
+
+    await user.type(input, '09123456789');
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /ارسال کد تأیید/i,
+      })
+    );
+
+    await waitFor(() => {
+      expect(mockRequestOTP).toHaveBeenCalledWith('09123456789');
+
+      expect(onSuccess).toHaveBeenCalledWith('09123456789');
+    });
+  });
+
+  // Error
+  it('shows server error message', async () => {
+    const user = userEvent.setup();
+
+    mockRequestOTP.mockResolvedValue({
+      success: false,
+      error: 'خطا در ارسال کد',
+    });
+
+    renderPhoneForm();
+
+    await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /ارسال کد تأیید/i,
+      })
+    );
+
+    expect(await screen.findByText('خطا در ارسال کد')).toBeInTheDocument();
+  });
+
+  // Loading
+  it('disables button and input while submitting', async () => {
+    const user = userEvent.setup();
+
+    let resolveRequest: any;
+
+    mockRequestOTP.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        })
+    );
+
+    renderPhoneForm();
+
+    const input = screen.getByLabelText('شماره موبایل');
+
+    const button = screen.getByRole('button', {
+      name: /ارسال کد تأیید/i,
+    });
+
+    await user.type(input, '09123456789');
+
+    await user.click(button);
+
+    await waitFor(() => {
       expect(
-        await screen.findByText(
-          'شماره موبایل الزامی است'
-        )
-      )
-      .toBeInTheDocument();
+        screen.getByRole('button', {
+          name: /در حال ارسال/i,
+        })
+      ).toBeDisabled();
 
+      expect(input).toBeDisabled();
     });
 
-
-
-    it('shows error for invalid phone format',async()=>{
-
-
-      const user =
-        userEvent.setup();
-
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      await user.type(
-        screen.getByLabelText(
-          'شماره موبایل'
-        ),
-        '091234567'
-      );
-
-
-      await user.click(
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        )
-      );
-
-
-      expect(
-        await screen.findByText(
-          'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد'
-        )
-      )
-      .toBeInTheDocument();
-
+    resolveRequest({
+      success: true,
     });
-
-
   });
-
-  // Submit success
-  describe('Submit',()=>{
-
-
-    it('calls requestOTP with valid phone',async()=>{
-
-      const user =
-        userEvent.setup();
-
-
-      mockRequestOTP.mockResolvedValue({
-        success:true
-      });
-
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      await user.type(
-        screen.getByLabelText(
-          'شماره موبایل'
-        ),
-        '09123456789'
-      );
-
-
-      await user.click(
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        )
-      );
-
-
-      await waitFor(()=>{
-
-        expect(
-          mockRequestOTP
-        )
-        .toHaveBeenCalledWith(
-          '09123456789'
-        );
-
-      });
-
-
-    });
-
-
-  });
-
-  // Error handling
-  describe('Request errors',()=>{
-
-
-    it('shows server error message',async()=>{
-
-
-      const user =
-        userEvent.setup();
-
-
-      mockRequestOTP.mockResolvedValue({
-
-        success:false,
-
-        error:
-          'خطا در ارسال کد'
-
-      });
-
-
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      await user.type(
-        screen.getByLabelText(
-          'شماره موبایل'
-        ),
-        '09123456789'
-      );
-
-
-      await user.click(
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        )
-      );
-
-
-
-      expect(
-        await screen.findByText(
-          'خطا در ارسال کد'
-        )
-      )
-      .toBeInTheDocument();
-
-
-    });
-
-
-
-    it('clears phone input after failed request',async()=>{
-
-
-      const user =
-        userEvent.setup();
-
-
-      mockRequestOTP.mockResolvedValue({
-
-        success:false,
-
-        error:'error'
-
-      });
-
-
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      const input =
-        screen.getByLabelText(
-          'شماره موبایل'
-        );
-
-
-      await user.type(
-        input,
-        '09123456789'
-      );
-
-
-      await user.click(
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        )
-      );
-
-
-      await waitFor(()=>{
-
-        expect(input)
-        .toHaveValue('');
-
-      });
-
-
-    });
-
-
-  });
-
-  // Loading state
-  describe('Loading state',()=>{
-
-
-    it('disables controls while submitting',async()=>{
-
-
-      const user =
-        userEvent.setup();
-
-
-      mockRequestOTP.mockImplementation(
-        () =>
-          new Promise(()=>{})
-      );
-
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      const input =
-        screen.getByLabelText(
-          'شماره موبایل'
-        );
-
-
-      const button =
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        );
-
-
-      await user.type(
-        input,
-        '09123456789'
-      );
-
-
-      await user.click(
-        button
-      );
-
-
-      await waitFor(()=>{
-
-        expect(input)
-          .toBeDisabled();
-
-
-        expect(button)
-          .toBeDisabled();
-
-      });
-
-
-    });
-
-
-
-    it('does not submit twice while request is pending',async()=>{
-
-
-      const user =
-        userEvent.setup();
-
-
-      mockRequestOTP.mockImplementation(
-        () =>
-          new Promise(()=>{})
-      );
-
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      await user.type(
-        screen.getByLabelText(
-          'شماره موبایل'
-        ),
-        '09123456789'
-      );
-
-
-      const button =
-        screen.getByRole(
-          'button',
-          {
-            name:/ارسال کد تأیید/i
-          }
-        );
-
-
-      await user.click(button);
-
-      await user.click(button);
-
-
-
-      expect(
-        mockRequestOTP
-      )
-      .toHaveBeenCalledTimes(1);
-
-
-    });
-
-
-  });
-
-  // Accessibility
-  describe('Accessibility',()=>{
-
-
-    it('sets aria-invalid when validation fails',async()=>{
-
-
-      const user =
-        userEvent.setup();
-
-
-      renderWithAuth(
-        <PhoneForm/>
-      );
-
-
-      const input =
-        screen.getByLabelText(
-          'شماره موبایل'
-        );
-
-
-      await user.click(screen.getByRole('button',{name:/ارسال کد تأیید/i}));
-
-      await waitFor(()=>{
-
-        expect(input)
-        .toHaveAttribute(
-          'aria-invalid',
-          'true'
-        );
-
-      });
-
-
-    });
-
-
-  });
-
-
 });

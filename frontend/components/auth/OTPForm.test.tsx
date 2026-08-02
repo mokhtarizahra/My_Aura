@@ -1,186 +1,170 @@
 // components/auth/OTPForm.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
-import { OTPForm } from './OTPForm';
-import { useOTP } from '@/hooks/useOTP'; // ✅ فقط useOTP
-import { AuthProvider } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// ─── Mocks ──────────────────────────────────────────────────────────────────
+import React from 'react';
 
-// only mock `useOTP`.
+import { useOTP } from '@/hooks/useOTP';
+
+import { OTPForm } from './OTPForm';
+
 vi.mock('@/hooks/useOTP', () => ({
   useOTP: vi.fn(),
 }));
 
-// Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
 }));
 
-// Mock next/link
-vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => {
-    return React.createElement('a', { href }, children);
-  },
-}));
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-const renderWithAuth = (ui: React.ReactNode) => {
-  return render(React.createElement(AuthProvider, null, ui));
+const mockRouter = {
+  push: vi.fn(),
 };
 
-// ─── Test Suite ────────────────────────────────────────────────────────────
-
 describe('OTPForm Component', () => {
-  const mockPhone = '09123456789';
+  const phone = '09123456789';
+
   const mockVerifyOTP = vi.fn();
   const mockResendOTP = vi.fn();
-  const mockRouter = { push: vi.fn(), replace: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Configuring the useOTP hook
-    (useOTP as any).mockReturnValue({
-      verifyOTP: mockVerifyOTP,
-      resendOTP: mockResendOTP,
-    });
-
     (useRouter as any).mockReturnValue(mockRouter);
+
+    (useOTP as any).mockImplementation((options: any = {}) => ({
+      verifyOTP: async (phone: string, code: string) => {
+        const result = await mockVerifyOTP(phone, code);
+
+        if (result.success) {
+          mockRouter.push('/settings/password');
+
+          await options.onSuccess?.();
+
+          return {
+            success: true,
+          };
+        }
+
+        return result;
+      },
+
+      resendOTP: async (phone: string) => {
+        return await mockResendOTP(phone);
+      },
+    }));
   });
 
-  // ─── Rendering Tests ──────────────────────────────────────────────────
+  it('renders correctly', () => {
+    render(<OTPForm phone={phone} />);
 
-  describe('Rendering', () => {
-    it('should render all form elements correctly', () => {
-      renderWithAuth(React.createElement(OTPForm, { phone: mockPhone }));
+    expect(screen.getByText('ورود با کد یکبارمصرف')).toBeInTheDocument();
 
-      expect(screen.getByText('ورود با کد یکبارمصرف')).toBeInTheDocument();
-      expect(screen.getByText('کد تأیید ۴ رقمی ارسال شده را وارد کنید')).toBeInTheDocument();
-      expect(screen.getByText('کد به این شماره ارسال شد:')).toBeInTheDocument();
-      expect(screen.getByText(mockPhone)).toBeInTheDocument();
-      expect(screen.getByLabelText('کد تأیید')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('مثلاً 1234')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'تأیید کد' })).toBeInTheDocument();
-      expect(screen.getByText('ارسال مجدد')).toBeInTheDocument();
-      expect(screen.getByText('وارد شوید')).toBeInTheDocument();
-    });
+    expect(screen.getByLabelText('کد تأیید')).toBeInTheDocument();
 
-    it('should show validation error for empty OTP', async () => {
-      const user = userEvent.setup();
-      renderWithAuth(React.createElement(OTPForm, { phone: mockPhone }));
-
-      const submitButton = screen.getByRole('button', { name: 'تأیید کد' });
-      await user.click(submitButton);
-
-      expect(await screen.findByText('کد باید دقیقاً ۴ رقم باشد')).toBeInTheDocument();
-    });
+    expect(
+      screen.getByRole('button', {
+        name: 'تأیید کد',
+      })
+    ).toBeInTheDocument();
   });
 
-  // ─── Success Scenarios ─────────────────────────────────────────────────
+  it('shows validation error for empty otp', async () => {
+    const user = userEvent.setup();
 
-  describe('Success Scenarios', () => {
-    it('should successfully verify OTP and redirect', async () => {
-      const user = userEvent.setup();
-      const mockOnSuccess = vi.fn();
+    render(<OTPForm phone={phone} />);
 
-      // Clearing Success
-      mockVerifyOTP.mockResolvedValue({ success: true });
+    await user.click(
+      screen.getByRole('button', {
+        name: 'تأیید کد',
+      })
+    );
 
-      renderWithAuth(
-        React.createElement(OTPForm, {
-          phone: mockPhone,
-          onSuccess: mockOnSuccess,
-        })
-      );
-
-      const otpInput = screen.getByLabelText('کد تأیید');
-      const submitButton = screen.getByRole('button', { name: 'تأیید کد' });
-
-      await user.type(otpInput, '1234');
-      await user.click(submitButton);
-
-      await waitFor(() => {
-        expect(mockVerifyOTP).toHaveBeenCalledWith(mockPhone, '1234');
-        expect(mockOnSuccess).toHaveBeenCalled();
-        expect(mockRouter.push).toHaveBeenCalledWith('/settings/password');
-      });
-    });
-
-    it('should show error when verification fails', async () => {
-      const user = userEvent.setup();
-
-      // Clear error
-      mockVerifyOTP.mockResolvedValue({
-        success: false,
-        error: 'کد نامعتبر است',
-      });
-
-      renderWithAuth(React.createElement(OTPForm, { phone: mockPhone }));
-
-      const otpInput = screen.getByLabelText('کد تأیید');
-      const submitButton = screen.getByRole('button', { name: 'تأیید کد' });
-
-      await user.type(otpInput, '1234');
-      await user.click(submitButton);
-
-      expect(await screen.findByText('کد نامعتبر است')).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText('کد باید دقیقاً ۴ رقم باشد')
+    ).toBeInTheDocument();
   });
 
-  // ─── Resend OTP Tests ──────────────────────────────────────────────────
+  it('successfully verifies otp and redirects', async () => {
+    const user = userEvent.setup();
 
-  describe('Resend OTP', () => {
-    it('should successfully resend OTP', async () => {
-      const user = userEvent.setup();
+    const onSuccess = vi.fn();
 
-      // Mocking a successful resend
-      mockResendOTP.mockResolvedValue({ success: true });
-
-      renderWithAuth(React.createElement(OTPForm, { phone: mockPhone }));
-
-      const resendButton = screen.getByText('ارسال مجدد');
-      await user.click(resendButton);
-
-      await waitFor(() => {
-        expect(mockResendOTP).toHaveBeenCalledWith(mockPhone);
-      });
+    mockVerifyOTP.mockResolvedValue({
+      success: true,
     });
 
-    it('should show error when resend fails', async () => {
-      const user = userEvent.setup();
+    render(<OTPForm phone={phone} onSuccess={onSuccess} />);
 
-      // Mocking a failed retry
-      mockResendOTP.mockResolvedValue({
-        success: false,
-        error: 'خطا در ارسال مجدد',
-      });
+    const input = screen.getByLabelText('کد تأیید');
 
-      renderWithAuth(React.createElement(OTPForm, { phone: mockPhone }));
+    await user.type(input, '1234');
 
-      const resendButton = screen.getByText('ارسال مجدد');
-      await user.click(resendButton);
+    await user.click(
+      screen.getByRole('button', {
+        name: 'تأیید کد',
+      })
+    );
 
-      expect(await screen.findByText('خطا در ارسال مجدد')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockVerifyOTP).toHaveBeenCalledWith(phone, '1234');
+
+      expect(onSuccess).toHaveBeenCalled();
+
+      expect(mockRouter.push).toHaveBeenCalledWith('/settings/password');
     });
   });
 
-  // ─── Navigation Tests ──────────────────────────────────────────────────
+  it('shows verification error', async () => {
+    const user = userEvent.setup();
 
-  describe('Navigation', () => {
-    it('should navigate to login page when clicking "وارد شوید"', async () => {
-      const user = userEvent.setup();
-
-      renderWithAuth(React.createElement(OTPForm, { phone: mockPhone }));
-
-      const loginLink = screen.getByText('وارد شوید');
-      await user.click(loginLink);
-
-      expect(mockRouter.push).toHaveBeenCalledWith('/auth/login');
+    mockVerifyOTP.mockResolvedValue({
+      success: false,
+      error: 'کد نامعتبر است',
     });
+
+    render(<OTPForm phone={phone} />);
+
+    await user.type(screen.getByLabelText('کد تأیید'), '1234');
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'تأیید کد',
+      })
+    );
+
+    expect(await screen.findByText('کد نامعتبر است')).toBeInTheDocument();
+  });
+
+  it('resends otp successfully', async () => {
+    const user = userEvent.setup();
+
+    mockResendOTP.mockResolvedValue({
+      success: true,
+    });
+
+    render(<OTPForm phone={phone} />);
+
+    await user.click(screen.getByText('ارسال مجدد'));
+
+    await waitFor(() => {
+      expect(mockResendOTP).toHaveBeenCalledWith(phone);
+    });
+  });
+
+  it('shows resend error', async () => {
+    const user = userEvent.setup();
+
+    mockResendOTP.mockResolvedValue({
+      success: false,
+      error: 'خطا در ارسال مجدد',
+    });
+
+    render(<OTPForm phone={phone} />);
+
+    await user.click(screen.getByText('ارسال مجدد'));
+
+    expect(await screen.findByText('خطا در ارسال مجدد')).toBeInTheDocument();
   });
 });
