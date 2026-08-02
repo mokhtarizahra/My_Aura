@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/constants/routes'; // ✅ ایمپورت
 
 export default function ForbiddenPage() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function ForbiddenPage() {
       <p className="text-muted-foreground mt-2">
         شما دسترسی لازم برای مشاهده این صفحه را ندارید.
       </p>
-      <Button className="mt-6" onClick={() => router.push('/')}>
+      <Button className="mt-6" onClick={() => router.push(ROUTES.HOME)}>
         بازگشت به صفحه اصلی
       </Button>
     </div>

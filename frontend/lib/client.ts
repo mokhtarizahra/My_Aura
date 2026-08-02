@@ -3,6 +3,8 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
+import { ROUTES } from '@/constants/routes';
+import { storage } from './storage';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -41,7 +43,7 @@ const processQueue = (error: any, token: string | null = null) => {
 // ─── Request Interceptor ──────────────────────────────────────────────────────
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = sessionStorage.getItem('accessToken');
+    const token = storage.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -55,6 +57,19 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
+
+     if (error.response?.status === 403) {
+      // Run only in a browser environment
+      if (typeof window !== 'undefined') {
+        // Clearing tokens (optional – since the user does not have access)
+        storage.removeAccessToken();
+        storage.removeRefreshToken();
+        
+        // Go to page 403
+        window.location.href = ROUTES.FORBIDDEN;
+      }
+      return Promise.reject(error);
+    }
 
     // If error is 401 and we haven't retried yet
     if (
@@ -77,12 +92,12 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const storedRefreshToken = sessionStorage.getItem('refreshToken');
+      const storedRefreshToken = storage.getRefreshToken();
 
       // If no refresh token, logout immediately
       if (!storedRefreshToken) {
         sessionStorage.clear();
-        window.location.href = '/login';
+        window.location.href = ROUTES.LOGIN;
         return Promise.reject(error);
       }
 
@@ -97,8 +112,8 @@ api.interceptors.response.use(
         const { accessToken, refreshToken } = refreshResponse.data;
 
         // Update tokens in storage
-        sessionStorage.setItem('accessToken', accessToken);
-        sessionStorage.setItem('refreshToken', refreshToken);
+        storage.setAccessToken(accessToken);
+        storage.setRefreshToken(refreshToken);
 
         window.dispatchEvent(
           new CustomEvent('tokensRefreshed', {
@@ -115,7 +130,7 @@ api.interceptors.response.use(
         // If refresh token is also invalid, logout
         processQueue(refreshError, null);
         sessionStorage.clear();
-        window.location.href = '/login';
+        window.location.href = ROUTES.LOGIN;
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

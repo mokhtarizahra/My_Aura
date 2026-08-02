@@ -13,7 +13,9 @@ export const ROUTES = {
   SETTINGS: '/settings',
   SETTINGS_PASSWORD: '/settings/password',
   SETTINGS_SESSIONS: '/settings/sessions',
-
+  ADMIN_USERS: '/admin/users',
+  ADMIN_SETTINGS: '/admin/settings',
+  
   // Error paths
   NOT_FOUND: '/404',
   FORBIDDEN: '/403',
@@ -38,11 +40,13 @@ export const PROTECTED_ROUTES: AppRoute[] = [
   ROUTES.SETTINGS,
   ROUTES.SETTINGS_PASSWORD,
   ROUTES.SETTINGS_SESSIONS,
+  ROUTES.ADMIN_USERS,     
+  ROUTES.ADMIN_SETTINGS, 
 ];
 
 // Admin-only routes
 export const ADMIN_ROUTES: AppRoute[] = [
   ROUTES.DASHBOARD_ADMIN,
-  '/admin/users',
-  '/admin/settings',
+  ROUTES.ADMIN_USERS,     
+  ROUTES.ADMIN_SETTINGS, 
 ];

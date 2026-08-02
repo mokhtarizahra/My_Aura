@@ -42,6 +42,19 @@ export const storage = {
   setResetToken: (token: string) =>
     sessionStorage.setItem(RESET_TOKEN_KEY, token),
 
+  // Delete method
+  removeResetToken: () => {
+    sessionStorage.removeItem(RESET_TOKEN_KEY);
+  },
+
+ // remove methods for other tokens
+  removeAccessToken: () => {
+    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  },
+  removeRefreshToken: () => {
+    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  },
+
   clear: () => {
     sessionStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(ACCESS_TOKEN_KEY);

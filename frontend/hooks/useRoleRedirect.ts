@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-
 import { ROLE_LABELS, ROLE_ROUTES } from '@/constants/roles';
-import { useToast } from '@/hooks/use-toast';
+import { ROUTES } from '@/constants/routes';
+import { useToast } from './use-toast';
 import { UserRole } from '@/types/auth';
 
 export function useRoleRedirect() {
@@ -12,21 +12,18 @@ export function useRoleRedirect() {
 
   const redirectByRole = (role: UserRole, options?: { replace?: boolean }) => {
     try {
-      // Role validation
       if (!role || !ROLE_ROUTES[role]) {
         throw new Error(`نقش نامعتبر: ${role}`);
       }
 
       const redirectPath = ROLE_ROUTES[role];
 
-      // Redirect
       if (options?.replace) {
         router.replace(redirectPath);
       } else {
         router.push(redirectPath);
       }
 
-      // Success Message
       toast({
         title: 'خوش آمدید!',
         description: `شما به عنوان ${ROLE_LABELS[role]} وارد شدید.`,
@@ -34,18 +31,17 @@ export function useRoleRedirect() {
 
       return redirectPath;
     } catch (error) {
-      // Error handling
       console.error('خطا در مسیریابی:', error);
 
       toast({
         title: 'خطا',
-        description: 'مشکلی در مسیریابی وجود دارد. به صفحه اصلی هدایت می‌شوید.',
+        description: 'شما دسترسی لازم برای این صفحه را ندارید.',
         variant: 'destructive',
       });
 
-      // Fallback: Go to the home page
-      router.replace('/');
-      return '/';
+      // Go to page 403
+      router.replace(ROUTES.FORBIDDEN);
+      return ROUTES.FORBIDDEN;
     }
   };
 

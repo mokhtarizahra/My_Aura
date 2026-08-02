@@ -99,6 +99,7 @@ export interface AuthContextType {
   isLoading: boolean;
   requestOTP: (phone: string) => Promise<MessageResponse>;
   verifyOTP: (phone: string, otp: string) => Promise<VerifyOTPResponse>;
+  resendOTP: (phone: string) => Promise<MessageResponse>;
   loginWithPassword: (phone: string, password: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   setPassword: (password: string) => Promise<void>;

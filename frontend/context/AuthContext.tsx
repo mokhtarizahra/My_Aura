@@ -161,6 +161,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
+  const resendOTP = useCallback(
+    async (phone: string): Promise<MessageResponse> => {
+      return authService.resendOTP(phone);
+    },
+    []
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -170,6 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       requestOTP,
       verifyOTP,
+      resendOTP, 
       loginWithPassword,
       logout,
       setPassword,
@@ -184,6 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading,
       requestOTP,
       verifyOTP,
+      resendOTP, 
       loginWithPassword,
       logout,
       setPassword,

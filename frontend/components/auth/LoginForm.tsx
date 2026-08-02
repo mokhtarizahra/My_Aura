@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Lock, Phone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -147,10 +146,10 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="toggle-password" // ✅ برای تست
+                data-testid="toggle-password" // For test
                 aria-label={
                   showPassword ? 'مخفی کردن رمز عبور' : 'نمایش رمز عبور'
-                } // ✅ برای دسترسی‌پذیری
+                } // For accessibility
               >
                 {showPassword ? (
                   <EyeOff className="w-4 h-4" />

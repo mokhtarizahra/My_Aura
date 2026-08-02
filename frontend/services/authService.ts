@@ -87,3 +87,14 @@ export const revokeSession = async (id: string): Promise<MessageResponse> => {
         throw new Error(message);
     }
 };
+
+export const resendOTP = async (phone: string): Promise<MessageResponse> => {
+  try {
+    const { data } = await api.post("/auth/resend-otp", { phone });
+    if (data.success === false) throw new Error(data.message);
+    return data;
+  } catch (err: any) {
+    const message = err.response?.data?.message || err.message || "خطا در ارسال مجدد کد";
+    throw new Error(message);
+  }
+};
