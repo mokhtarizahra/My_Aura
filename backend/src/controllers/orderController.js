@@ -1,7 +1,6 @@
 import Order from "../models/Order.js";
 import Service from "../models/Service.js";
 
-
 // CREATE ORDER
 export const createOrder = async (req, res) => {
   try {
@@ -28,9 +27,7 @@ export const createOrder = async (req, res) => {
 
     // delivery date
     const deliveryDate = new Date();
-    deliveryDate.setDate(
-      deliveryDate.getDate() + service.deliveryTime
-    );
+    deliveryDate.setDate(deliveryDate.getDate() + service.deliveryTime);
 
     // create order
     const order = await Order.create({
@@ -43,13 +40,10 @@ export const createOrder = async (req, res) => {
     });
 
     res.status(201).json(order);
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // GET BUYER ORDERS
 export const getMyOrders = async (req, res) => {
@@ -65,8 +59,6 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-
-
 // GET SELLER ORDERS
 export const getSales = async (req, res) => {
   try {
@@ -80,8 +72,6 @@ export const getSales = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // GET SINGLE ORDER
 export const getSingleOrder = async (req, res) => {
@@ -99,7 +89,9 @@ export const getSingleOrder = async (req, res) => {
     const isSeller = order.seller._id.toString() === req.user.id;
 
     if (!isBuyer && !isSeller) {
-      return res.status(403).json({ message: "Not authorized to view this order" });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to view this order" });
     }
 
     res.status(200).json(order);
@@ -107,7 +99,6 @@ export const getSingleOrder = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // UPDATE ORDER STATUS (SELLER)
 export const updateOrderStatus = async (req, res) => {

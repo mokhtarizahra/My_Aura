@@ -1,13 +1,10 @@
-// components/auth/LoginForm.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { useAuth } from '@/hooks/useAuth';
-
+import { useAuth } from '@/hooks/authentication/useAuth';
 import { LoginForm } from './LoginForm';
 
-vi.mock('@/hooks/useAuth', () => ({
+vi.mock('@/hooks/authentication/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
@@ -43,16 +40,10 @@ describe('LoginForm Component', () => {
 
     expect(screen.getByLabelText('شماره موبایل')).toBeInTheDocument();
 
-    expect(
-      screen.getByLabelText('رمز عبور', {
-        selector: 'input',
-      })
+    expect(screen.getByLabelText('رمز عبور', {selector: 'input'})
     ).toBeInTheDocument();
 
-    expect(
-      screen.getByRole('button', {
-        name: 'ورود',
-      })
+    expect(screen.getByRole('button', {name: 'ورود'})
     ).toBeInTheDocument();
 
     expect(screen.getByText('حساب کاربری ندارید؟')).toBeInTheDocument();
@@ -63,18 +54,12 @@ describe('LoginForm Component', () => {
 
     renderLoginForm();
 
-    await user.click(
-      screen.getByRole('button', {
-        name: 'ورود',
-      })
-    );
+    await user.click(screen.getByRole('button', {name: 'ورود'}));
 
-    expect(
-      await screen.findByText('شماره موبایل الزامی است')
+    expect(await screen.findByText('شماره موبایل الزامی است')
     ).toBeInTheDocument();
 
-    expect(
-      await screen.findByText('رمز عبور باید حداقل ۶ کاراکتر باشد')
+    expect(await screen.findByText('رمز عبور باید حداقل ۶ کاراکتر باشد')
     ).toBeInTheDocument();
   });
 
@@ -85,21 +70,13 @@ describe('LoginForm Component', () => {
 
     await user.type(screen.getByLabelText('شماره موبایل'), '0912345');
 
-    await user.type(
-      screen.getByLabelText('رمز عبور', {
-        selector: 'input',
-      }),
-      '123456'
+    await user.type(screen.getByLabelText('رمز عبور',
+      {selector: 'input'}),'123456'
     );
 
-    await user.click(
-      screen.getByRole('button', {
-        name: 'ورود',
-      })
-    );
+    await user.click(screen.getByRole('button', {name: 'ورود'}));
 
-    expect(
-      await screen.findByText('شماره موبایل معتبر ایرانی وارد کنید')
+    expect(await screen.findByText('شماره موبایل معتبر ایرانی وارد کنید')
     ).toBeInTheDocument();
   });
 
@@ -109,37 +86,21 @@ describe('LoginForm Component', () => {
     const onSuccess = vi.fn();
 
     mockLoginWithPassword.mockResolvedValue({
-      success: true,
-      user: {
-        role: 'USER',
-      },
+      success: true,user: {role: 'USER',},
     });
 
-    renderLoginForm({
-      onSuccess,
-    });
+    renderLoginForm({onSuccess});
 
     await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
 
     await user.type(
-      screen.getByLabelText('رمز عبور', {
-        selector: 'input',
-      }),
-      'securepass'
+      screen.getByLabelText('رمز عبور', {selector: 'input'}),'securepass'
     );
 
-    await user.click(
-      screen.getByRole('button', {
-        name: 'ورود',
-      })
-    );
+    await user.click(screen.getByRole('button', {name: 'ورود'}));
 
     await waitFor(() => {
-      expect(mockLoginWithPassword).toHaveBeenCalledWith(
-        '09123456789',
-        'securepass'
-      );
-
+      expect(mockLoginWithPassword).toHaveBeenCalledWith('09123456789','securepass');
       expect(onSuccess).toHaveBeenCalledWith('USER');
     });
   });
@@ -151,27 +112,17 @@ describe('LoginForm Component', () => {
 
     mockLoginWithPassword.mockRejectedValue(new Error('Invalid credentials'));
 
-    renderLoginForm({
-      onError,
-    });
+    renderLoginForm({onError});
 
     await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
 
-    await user.type(
-      screen.getByLabelText('رمز عبور', {
-        selector: 'input',
-      }),
-      'wrongpass'
+    await user.type(screen.getByLabelText('رمز عبور',
+      {selector: 'input'}),'wrongpass'
     );
 
-    await user.click(
-      screen.getByRole('button', {
-        name: 'ورود',
-      })
-    );
+    await user.click(screen.getByRole('button', {name: 'ورود'}));
 
-    expect(
-      await screen.findByText('نام کاربری یا رمز عبور نادرست است.')
+    expect(await screen.findByText('نام کاربری یا رمز عبور نادرست است.')
     ).toBeInTheDocument();
 
     expect(onError).toHaveBeenCalled();

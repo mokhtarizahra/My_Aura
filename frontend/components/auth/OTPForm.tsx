@@ -2,11 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
 import { useState } from 'react';
-
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -19,9 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/constants/routes';
-import { useOTP } from '@/hooks/useOTP';
-import { useRouter } from 'next/navigation';
-
+import { useOTP } from '@/hooks/authentication/useOTP';
 
 // ─── Validation Schema ──────────────────────────────────────────────────────
 const otpSchema = z.object({
@@ -43,14 +40,16 @@ export function OTPForm({ phone, onSuccess, onError }: OTPFormProps) {
   const [errorMessage, setErrorMessage] = useState('');
   const [isResending, setIsResending] = useState(false);
 
-// Using useOTP
+  // Using useOTP
   const { verifyOTP, resendOTP } = useOTP({
     onSuccess,
     onError,
-    redirectPath: ROUTES.SETTINGS_PASSWORD,
+    redirectPath: ROUTES.REGISTER,
   });
 
-  const { register, handleSubmit,
+  const {
+    register,
+    handleSubmit,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<OTPFormValues>({
@@ -63,7 +62,7 @@ export function OTPForm({ phone, onSuccess, onError }: OTPFormProps) {
   const onSubmit = async (data: OTPFormValues) => {
     setErrorMessage('');
     const result = await verifyOTP(phone, data.otp);
-    
+
     if (!result.success) {
       setErrorMessage(result.error || 'خطا در تأیید کد');
     }
@@ -72,13 +71,13 @@ export function OTPForm({ phone, onSuccess, onError }: OTPFormProps) {
   const handleResend = async () => {
     setIsResending(true);
     setErrorMessage('');
-    
+
     const result = await resendOTP(phone);
-    
+
     if (!result.success) {
       setErrorMessage(result.error || 'خطا در ارسال مجدد');
     }
-    
+
     setIsResending(false);
   };
 
@@ -89,8 +88,12 @@ export function OTPForm({ phone, onSuccess, onError }: OTPFormProps) {
         <div className="mx-auto w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg mb-4">
           <ShieldCheck className="w-7 h-7 text-primary-foreground" />
         </div>
-        <CardTitle className="text-2xl font-bold">ورود با کد یکبارمصرف</CardTitle>
-        <CardDescription>کد تأیید ۴ رقمی ارسال شده را وارد کنید</CardDescription>
+        <CardTitle className="text-2xl font-bold">
+          ورود با کد یکبارمصرف
+        </CardTitle>
+        <CardDescription>
+          کد تأیید ۴ رقمی ارسال شده را وارد کنید
+        </CardDescription>
       </CardHeader>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -99,8 +102,13 @@ export function OTPForm({ phone, onSuccess, onError }: OTPFormProps) {
           <div className="p-3 rounded-lg bg-muted border border-border">
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-              <span className="text-muted-foreground">کد به این شماره ارسال شد:</span>
-              <span className="font-bold text-foreground tracking-wider" dir="ltr">
+              <span className="text-muted-foreground">
+                کد به این شماره ارسال شد:
+              </span>
+              <span
+                className="font-bold text-foreground tracking-wider"
+                dir="ltr"
+              >
                 {phone}
               </span>
             </div>
@@ -133,7 +141,10 @@ export function OTPForm({ phone, onSuccess, onError }: OTPFormProps) {
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20" role="alert">
+            <div
+              className="p-3 rounded-lg bg-destructive/10 border border-destructive/20"
+              role="alert"
+            >
               <p className="text-sm text-destructive text-center">
                 {errorMessage}
               </p>

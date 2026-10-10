@@ -1,14 +1,27 @@
-import { describe, it, expect } from 'vitest';
-import { generateOTP } from './generateOTP.js';
+import { describe, expect, it } from "vitest";
 
-describe('Utility:generateOTP', () => {
-	it('it must return astring that is exactly 4 digits long and consists solely of numbers', () => {
-		//Act
-		const otp  = generateOTP ();
+import { generateOTP } from "./generateOTP.js";
 
-		//Assert
-		expect(otp).toHaveLength(4);
-		expect(typeof otp).toBe('string');
-		expect(/^\d{4}$/.test(otp)).toBe(true);
-	});
+describe("Utility: generateOTP", () => {
+  it("should generate a 4-digit OTP by default", () => {
+    const otp = generateOTP();
+
+    expect(typeof otp).toBe("string");
+
+    expect(otp).toHaveLength(4);
+
+    expect(/^\d{4}$/.test(otp)).toBe(true);
+  });
+
+  it("should generate an OTP with the requested length", () => {
+    const otp = generateOTP(6);
+
+    expect(otp).toHaveLength(6);
+
+    expect(/^\d{6}$/.test(otp)).toBe(true);
+  });
+
+  it("should throw an error for an invalid length", () => {
+    expect(() => generateOTP(3)).toThrow();
+  });
 });

@@ -4,14 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import React from 'react';
 
-import { usePhone } from '@/hooks/usePhone';
+import { usePhone } from '@/hooks/authentication/usePhone';
 
 import { PhoneForm } from './PhoneForm';
 
 // Mocks
 const mockRequestOTP = vi.fn();
 
-vi.mock('@/hooks/usePhone', () => ({
+vi.mock('@/hooks/authentication/usePhone', () => ({
   usePhone: vi.fn(),
 }));
 

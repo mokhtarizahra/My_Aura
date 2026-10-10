@@ -3,6 +3,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Phone, Send } from 'lucide-react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -20,8 +21,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/constants/routes';
-import { usePhone } from '@/hooks/usePhone';
-import Link from 'next/link';
+import { usePhone } from '@/hooks/authentication/usePhone';
+
+// components/auth/PhoneForm.tsx
 
 // ─── Validation Schema ──────────────────────────────────────────────────────
 const phoneSchema = z.object({
@@ -82,7 +84,9 @@ export function PhoneForm({ onSuccess, onError }: PhoneFormProps) {
         <div className="mx-auto w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg mb-4">
           <Phone className="w-7 h-7 text-primary-foreground" />
         </div>
-        <CardTitle className="text-2xl font-bold">ورود به حساب کاربری</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          ورود به حساب کاربری
+        </CardTitle>
         <CardDescription>
           شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود
         </CardDescription>

@@ -1,9 +1,9 @@
 import express from "express";
 import {
-    getMyConversations,
-    getConversationById,
-    markAsRead,
-    archiveConversation
+  getMyConversations,
+  getConversationById,
+  markAsRead,
+  archiveConversation,
 } from "../controllers/conversationController.js";
 import { protect } from "../middleware/authMiddleware.js";
 

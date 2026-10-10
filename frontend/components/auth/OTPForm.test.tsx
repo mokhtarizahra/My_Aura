@@ -1,4 +1,3 @@
-// components/auth/OTPForm.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
@@ -6,11 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import React from 'react';
 
-import { useOTP } from '@/hooks/useOTP';
+import { useOTP } from '@/hooks/authentication/useOTP';
 
 import { OTPForm } from './OTPForm';
 
-vi.mock('@/hooks/useOTP', () => ({
+vi.mock('@/hooks/authentication/useOTP', () => ({
   useOTP: vi.fn(),
 }));
 

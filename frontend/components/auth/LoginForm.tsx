@@ -2,8 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Lock, Phone } from 'lucide-react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -17,9 +19,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
-import Link from 'next/link';
 import { ROUTES } from '@/constants/routes';
+import { useAuth } from '@/hooks/authentication/useAuth';
 import { UserRole } from '@/types/auth';
 
 // ─── Validation Schema ──────────────────────────────────────────────────────

@@ -1,0 +1,48 @@
+{
+  "Common": {
+    "appName": "اورای من",
+    "loading": "در حال بارگذاری...",
+    "retry": "تلاش دوباره",
+    "cancel": "انصراف",
+    "confirm": "تایید",
+    "back": "بازگشت",
+    "next": "بعدی",
+    "submit": "ارسال",
+    "unknownError": "خطای ناشناخته رخ داد"
+  },
+
+  "Validation": {
+    "VALIDATION_FAILED": "اطلاعات ارسالی نامعتبر است",
+    "IDENTIFIER_REQUIRED": "شناسه الزامی است",
+    "IDENTIFIER_EMPTY": "شناسه نمی‌تواند خالی باشد",
+    "IDENTIFIER_TYPE_INVALID": "نوع شناسه نامعتبر است",
+    "ACCOUNT_TYPE_INVALID": "نوع حساب نامعتبر است",
+    "PASSWORD_REQUIRED": "پسورد الزامی است",
+    "PASSWORD_EMPTY": "پسورد نمی‌تواند خالی باشد",
+    "PASSWORD_TOO_LONG": "پسورد بیش از حد طولانی است"
+  },
+
+  "Auth": {
+    "login": {
+      "title": "ورود به حساب",
+      "identifier": "شماره موبایل یا ایمیل",
+      "password": "پسورد",
+      "submit": "ورود",
+      "noAccount": "حساب ندارید؟",
+      "register": "ثبت‌نام کنید"
+    },
+    "register": {
+      "title": "ثبت‌نام",
+      "firstName": "نام",
+      "lastName": "نام خانوادگی",
+      "password": "پسورد",
+      "submit": "ثبت‌نام"
+    },
+    "otp": {
+      "title": "کد تایید",
+      "description": "کد ۶ رقمی ارسال‌شده را وارد کنید",
+      "submit": "تایید",
+      "resend": "ارسال دوباره کد"
+    }
+  }
+}

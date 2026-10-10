@@ -61,7 +61,6 @@ describe('storage utility', () => {
       // Arrange
       storage.setUser({ id: '1', name: 'علی', role: 'user' });
       storage.setAccessToken('token123');
-      storage.setRefreshToken('refresh456');
 
       // Act
       storage.clear();

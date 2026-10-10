@@ -8,6 +8,15 @@ services:
       - mongo_data:/data/db
     restart: unless-stopped
 
+  mongodb-test:
+    image: mongo:7
+    container_name: my-mongodb-test
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_test_data:/data/db
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -19,6 +28,7 @@ services:
       - /app/node_modules
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/my_aura
+      - MONGODB_TEST_URI=mongodb://mongodb-test:27017/my_aura_test
       - JWT_SECRET=supersecretkey
       - JWT_EXPIRE=15m
       - REFRESH_JWT_EXPIRE=7d
@@ -45,13 +55,15 @@ services:
       - /app/node_modules
       - /app/.next
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-      - NODE_ENV=development
+    - NEXT_PUBLIC_API_URL=/api
+    - BACKEND_URL=http://backend:5000
+    - CHOKIDAR_USEPOLLING=true
+    - WATCHPACK_POLLING=true
+    - NODE_ENV=development
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
   mongo_data:
+  mongo_test_data:

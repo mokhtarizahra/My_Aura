@@ -1,30 +1,33 @@
 import mongoose from "mongoose";
 
-const matchSchema = new mongoose.Schema({
-    users: [{
+const matchSchema = new mongoose.Schema(
+  {
+    users: [
+      {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
-    }],
+        required: true,
+      },
+    ],
 
     status: {
-        type: String,
-        enum: ["active", "blocked", "removed"],
-        default: "active"
+      type: String,
+      enum: ["active", "blocked", "removed"],
+      default: "active",
     },
 
     createdAt: {
-        type: Date,
-        default: Date.now
+      type: Date,
+      default: Date.now,
     },
 
     blockedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        default: null
-    }
-},
-    { timestamps: true }
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+  },
+  { timestamps: true },
 );
 
 // prevent duplicate matches between two useres

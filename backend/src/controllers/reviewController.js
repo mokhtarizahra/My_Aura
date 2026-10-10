@@ -14,7 +14,9 @@ export const createReview = async (req, res) => {
 
     // only buyer
     if (order.buyer.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Not allowed to review this order" });
+      return res
+        .status(403)
+        .json({ message: "Not allowed to review this order" });
     }
 
     // only after completion
@@ -55,7 +57,6 @@ export const createReview = async (req, res) => {
     });
 
     res.status(201).json(review);
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -63,41 +64,36 @@ export const createReview = async (req, res) => {
 
 // Getting Reviews of a Service
 export const getServiceReviews = async (req, res) => {
-    try {
-      const reviews = await Review.find({
-        service: req.params.serviceId,
-      })
-        .populate("reviewer", "name avatar")
-        .sort({ createdAt: -1 });
-  
-      res.json(reviews);
-  
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
-  
+  try {
+    const reviews = await Review.find({
+      service: req.params.serviceId,
+    })
+      .populate("reviewer", "name avatar")
+      .sort({ createdAt: -1 });
 
-  // Remove Review
-  export const deleteReview = async (req, res) => {
-    try {
-  
-      const review = await Review.findById(req.params.id);
-  
-      if (!review) {
-        return res.status(404).json({ message: "Review not found" });
-      }
-  
-      if (review.reviewer.toString() !== req.user.id) {
-        return res.status(403).json({ message: "Not authorized" });
-      }
-  
-      await review.deleteOne();
-  
-      res.json({ message: "Review removed" });
-  
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Remove Review
+export const deleteReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
     }
-  };
-  
+
+    if (review.reviewer.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    await review.deleteOne();
+
+    res.json({ message: "Review removed" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

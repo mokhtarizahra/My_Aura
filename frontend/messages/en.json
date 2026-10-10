@@ -1,0 +1,48 @@
+{
+  "Common": {
+    "appName": "My Aura",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "unknownError": "An unknown error occurred"
+  },
+
+  "Validation": {
+    "VALIDATION_FAILED": "Validation failed",
+    "IDENTIFIER_REQUIRED": "Identifier is required",
+    "IDENTIFIER_EMPTY": "Identifier cannot be empty",
+    "IDENTIFIER_TYPE_INVALID": "Invalid identifier type",
+    "ACCOUNT_TYPE_INVALID": "Invalid account type",
+    "PASSWORD_REQUIRED": "Password is required",
+    "PASSWORD_EMPTY": "Password cannot be empty",
+    "PASSWORD_TOO_LONG": "Password is too long"
+  },
+
+  "Auth": {
+    "login": {
+      "title": "Sign in",
+      "identifier": "Phone or email",
+      "password": "Password",
+      "submit": "Sign in",
+      "noAccount": "Don't have an account?",
+      "register": "Register"
+    },
+    "register": {
+      "title": "Register",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "password": "Password",
+      "submit": "Register"
+    },
+    "otp": {
+      "title": "Verification code",
+      "description": "Enter the 6-digit code sent to you",
+      "submit": "Verify",
+      "resend": "Resend code"
+    }
+  }
+}

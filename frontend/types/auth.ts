@@ -20,21 +20,18 @@ export interface User {
 // ========== احراز هویت ==========
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
 }
 
 export type AuthResponse = 
   | {
       success: true;
       accessToken: string;
-      refreshToken: string;
       user: User;
     }
   | {
       success: false;
       message: string;
       accessToken?: never;
-      refreshToken?: never;
       user?: never;
     };
 
@@ -76,7 +73,6 @@ export type MessageResponse = {
 export type RefreshTokenResponse = {
   success: boolean;
   accessToken: string;
-  refreshToken: string;
 };
 
 // ========== سایر موجودیت‌ها ==========
@@ -94,7 +90,6 @@ export interface Session {
 export interface AuthContextType {
   user: User | null;
   accessToken: string | null;
-  refreshToken: string | null;
   resetToken: string | null;
   isLoading: boolean;
   requestOTP: (phone: string) => Promise<MessageResponse>;
