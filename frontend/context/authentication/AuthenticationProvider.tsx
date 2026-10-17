@@ -83,8 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // ─── Helper: store auth result ──────────────────────────────────
-  const persistAuth = useCallback(
-  (data: AuthResponse) => {
+  const persistAuth = useCallback((data: AuthResponse) => {
     if (!data.success) return;
 
     setSession(data.data.session);
@@ -95,9 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     document.cookie = `isLoggedIn=1; path=/; max-age=604800`;
     document.cookie = `accountType=${data.data.session.accountType}; path=/; max-age=604800`;
-  },
-  []
-);
+  }, []);
   // ─── Login ──────────────────────────────────────────────────────
   const loginWithPassword = useCallback(
     async (
@@ -169,12 +166,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return sessionService.revokeSession();
   }, []);
 
-  const revokeAllSessions = useCallback(
-    async (): Promise<MessageResponse> => {
-      return sessionService.revokeAllSessions();
-    },
-    []
-  );
+  const revokeAllSessions = useCallback(async (): Promise<MessageResponse> => {
+    return sessionService.revokeAllSessions();
+  }, []);
 
   // ─── Context value ──────────────────────────────────────────────
   const value = useMemo(

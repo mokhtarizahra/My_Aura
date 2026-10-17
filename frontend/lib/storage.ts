@@ -28,8 +28,7 @@ export const storage = {
   },
 
   // ─── Access Token ─────────────────────────────────────────
-  getAccessToken: (): string | null =>
-    sessionStorage.getItem(ACCESS_TOKEN_KEY),
+  getAccessToken: (): string | null => sessionStorage.getItem(ACCESS_TOKEN_KEY),
   setAccessToken: (token: string) =>
     sessionStorage.setItem(ACCESS_TOKEN_KEY, token),
   removeAccessToken: () => {
@@ -37,8 +36,7 @@ export const storage = {
   },
 
   // ─── Reset Token (password reset flow) ────────────────────
-  getResetToken: (): string | null =>
-    sessionStorage.getItem(RESET_TOKEN_KEY),
+  getResetToken: (): string | null => sessionStorage.getItem(RESET_TOKEN_KEY),
   setResetToken: (token: string) =>
     sessionStorage.setItem(RESET_TOKEN_KEY, token),
   removeResetToken: () => {

@@ -16,7 +16,7 @@ export class AppError extends Error {
    */
   constructor(code, status, message) {
     super(message || code);
-    this.name = 'AppError';
+    this.name = "AppError";
     this.code = code;
     this.status = status;
 

@@ -3,7 +3,7 @@
  *
  * These codes are sent to the client instead of human-readable text.
  * The client is responsible for translating them based on the user's
- * locale (e.g. using i18next).
+ * locale (e.g. using next-intl).
  *
  * Naming convention: UPPER_SNAKE_CASE
  * Grouped by domain.
@@ -11,39 +11,50 @@
 
 export const MESSAGES = {
   // ---------------------------------------------------------------
-  // Validation
+  // General validation
   // ---------------------------------------------------------------
   VALIDATION_FAILED: "VALIDATION_FAILED",
 
+  // ---------------------------------------------------------------
   // Identifier
+  // ---------------------------------------------------------------
   IDENTIFIER_REQUIRED: "IDENTIFIER_REQUIRED",
   IDENTIFIER_EMPTY: "IDENTIFIER_EMPTY",
   IDENTIFIER_TYPE_INVALID: "IDENTIFIER_TYPE_INVALID",
 
+  // ---------------------------------------------------------------
   // Account
+  // ---------------------------------------------------------------
   ACCOUNT_TYPE_INVALID: "ACCOUNT_TYPE_INVALID",
 
+  // ---------------------------------------------------------------
   // Password
+  // ---------------------------------------------------------------
   PASSWORD_REQUIRED: "PASSWORD_REQUIRED",
   PASSWORD_EMPTY: "PASSWORD_EMPTY",
+  PASSWORD_TOO_SHORT: "PASSWORD_TOO_SHORT",
   PASSWORD_TOO_LONG: "PASSWORD_TOO_LONG",
 
   // ---------------------------------------------------------------
-  // Auth (placeholder — will be filled in later)
+  // OTP
   // ---------------------------------------------------------------
-  // INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
-  // ACCESS_TOKEN_REQUIRED: "ACCESS_TOKEN_REQUIRED",
-  // ...
+  OTP_REQUIRED: "OTP_REQUIRED",
+  OTP_FORMAT_INVALID: "OTP_FORMAT_INVALID",
+  OTP_PURPOSE_INVALID: "OTP_PURPOSE_INVALID",
 
   // ---------------------------------------------------------------
-  // OTP (placeholder — will be filled in later)
+  // Verification token
   // ---------------------------------------------------------------
-  // OTP_INVALID_OR_EXPIRED: "OTP_INVALID_OR_EXPIRED",
-  // ...
+  VERIFICATION_TOKEN_REQUIRED: "VERIFICATION_TOKEN_REQUIRED",
 
   // ---------------------------------------------------------------
-  // Success (placeholder — will be filled in later)
+  // Personal name
   // ---------------------------------------------------------------
-  // LOGIN_SUCCESS: "LOGIN_SUCCESS",
-  // ...
+  FIRST_NAME_REQUIRED: "FIRST_NAME_REQUIRED",
+  FIRST_NAME_TOO_SHORT: "FIRST_NAME_TOO_SHORT",
+  FIRST_NAME_TOO_LONG: "FIRST_NAME_TOO_LONG",
+
+  LAST_NAME_REQUIRED: "LAST_NAME_REQUIRED",
+  LAST_NAME_TOO_SHORT: "LAST_NAME_TOO_SHORT",
+  LAST_NAME_TOO_LONG: "LAST_NAME_TOO_LONG",
 };

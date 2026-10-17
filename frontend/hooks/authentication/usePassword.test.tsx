@@ -105,10 +105,7 @@ describe('usePassword', () => {
 
     let response: any;
     await act(async () => {
-      response = await result.current.setPassword(
-        'verification-token',
-        '123'
-      );
+      response = await result.current.setPassword('verification-token', '123');
     });
 
     expect(response).toEqual({

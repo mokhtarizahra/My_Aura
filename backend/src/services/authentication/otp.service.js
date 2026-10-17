@@ -38,7 +38,7 @@ const validatePurpose = (purpose) => {
 // Validate identifier.
 const validateIdentifier = (identifier) => {
   if (typeof identifier !== "string" || !identifier.trim()) {
-    	throw authErrors.identifierRequired();
+    throw authErrors.identifierRequired();
   }
 
   return identifier.trim();
@@ -102,7 +102,7 @@ export const sendOTP = async ({
     });
 
     if (account) {
-      	throw authErrors.accountAlreadyExists();
+      throw authErrors.accountAlreadyExists();
     }
   }
 
@@ -213,7 +213,7 @@ export const verifyOTP = async ({
       _id: otpRecord._id,
     });
 
-    throw authErrors.otpExpired()
+    throw authErrors.otpExpired();
   }
 
   /*

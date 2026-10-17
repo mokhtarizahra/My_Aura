@@ -28,7 +28,9 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 // ─── Helpers ────────────────────────────────────────────────────
-const buildAuthSuccess = (accountType: 'personal' | 'organization' | 'staff' = 'personal') => ({
+const buildAuthSuccess = (
+  accountType: 'personal' | 'organization' | 'staff' = 'personal'
+) => ({
   success: true as const,
   data: {
     accessToken: 'mock-access-token',

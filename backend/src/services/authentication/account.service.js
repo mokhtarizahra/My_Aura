@@ -373,9 +373,8 @@ export const setAccountPassword = async ({
   const AccountModel = getAccountModel(accountType);
 
   // Fetch account first (we need the current hash to compare)
-  const account = await AccountModel.findById(accountId).select(
-    "+passwordHash",
-  );
+  const account =
+    await AccountModel.findById(accountId).select("+passwordHash");
 
   if (!account) {
     throw authErrors.accountNotFound();

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { storage } from './storage';
 import type { Session } from '@/types/auth';
+
+import { storage } from './storage';
 
 const mockSession: Session = {
   _id: 'session-1',

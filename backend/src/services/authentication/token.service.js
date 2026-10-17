@@ -108,8 +108,11 @@ export const generateVerificationToken = ({
   validateIdentifierType(identifierType);
   validateVerificationPurpose(purpose);
 
-  console.log('[TOKEN DEBUG] Generating verification token at:', new Date().toISOString());
-  console.log('[TOKEN DEBUG] Now timestamp:', Math.floor(Date.now() / 1000));
+  console.log(
+    "[TOKEN DEBUG] Generating verification token at:",
+    new Date().toISOString(),
+  );
+  console.log("[TOKEN DEBUG] Now timestamp:", Math.floor(Date.now() / 1000));
 
   return generateToken(
     {

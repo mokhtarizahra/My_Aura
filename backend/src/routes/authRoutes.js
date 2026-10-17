@@ -25,7 +25,13 @@ import {
 
 import { authenticateAccessToken } from "../middlewares/auth.middleware.js";
 
-import { loginSchema } from "../validators/auth.validator.js";
+import {
+  loginSchema,
+  passwordResetSchema,
+  registerSchema,
+  requestOTPSchema,
+  verifyOTPSchema,
+} from "../validators/auth.validator.js";
 import { validateBody } from "../middlewares/validate.js";
 
 const router = Router();
@@ -41,14 +47,23 @@ const router = Router();
  *
  * POST /api/auth/otp/request
  */
-router.post("/otp/request", otpLimiter, requestOTP);
-
+router.post(
+  "/otp/request",
+  otpLimiter,
+  validateBody(requestOTPSchema),
+  requestOTP,
+);
 /**
  * Verify OTP
  *
  * POST /api/auth/otp/verify
  */
-router.post("/otp/verify", otpVerifyLimiter, verifyOTPController);
+router.post(
+  "/otp/verify",
+  otpVerifyLimiter,
+  validateBody(verifyOTPSchema),
+  verifyOTPController,
+);
 
 /**
  * Register Personal Account
@@ -58,7 +73,12 @@ router.post("/otp/verify", otpVerifyLimiter, verifyOTPController);
  * Public registration is only available for
  * Personal Accounts.
  */
-router.post("/register", registerLimiter, register);
+router.post(
+  "/register",
+  registerLimiter,
+  validateBody(registerSchema),
+  register,
+);
 
 /**
  * Login
@@ -80,7 +100,12 @@ router.post(
  * The controller validates the verification token
  * generated after OTP verification.
  */
-router.post("/password/reset", passwordResetLimiter, setPassword);
+router.post(
+  "/password/reset",
+  passwordResetLimiter,
+  validateBody(passwordResetSchema),
+  setPassword,
+);
 
 /*
 |--------------------------------------------------------------------------

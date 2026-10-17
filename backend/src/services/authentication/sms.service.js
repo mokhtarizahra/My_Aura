@@ -44,15 +44,13 @@ export const sendSMS = async (identifier, otp) => {
    * });
    */
 
-    /*
+  /*
    * In development, log the OTP and skip sending real SMS.
    * In test, log it too.
    * In production, send real SMS.
    */
   if (process.env.NODE_ENV !== "production") {
-    console.log(
-      `[DEV] SMS to ${phone} — OTP: ${normalizedOTP}`,
-    );
+    console.log(`[DEV] SMS to ${phone} — OTP: ${normalizedOTP}`);
     return {
       success: true,
       channel: "sms",
@@ -60,12 +58,12 @@ export const sendSMS = async (identifier, otp) => {
     };
   }
 
-   // ارسال واقعی از طریق sms.ir
+  // ارسال واقعی از طریق sms.ir
   let result;
   try {
     result = await sendVerificationCode(phone, normalizedOTP);
   } catch (err) {
-    console.error('[SMS.ir] Send failed:', err?.message || err);
+    console.error("[SMS.ir] Send failed:", err?.message || err);
     throw authErrors.smsSendFailed();
   }
 
@@ -105,7 +103,7 @@ export const sendEmailOTP = async (identifier, otp) => {
    * });
    */
 
-    if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production") {
     console.log(`[DEV] Email to ${email} — OTP: ${normalizedOTP}`);
   }
 

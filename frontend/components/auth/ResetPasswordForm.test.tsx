@@ -53,9 +53,7 @@ describe('ResetPasswordForm', () => {
 
     expect(screen.getByText('تعیین رمز عبور جدید')).toBeInTheDocument();
     expect(screen.getByLabelText('رمز عبور جدید')).toBeInTheDocument();
-    expect(
-      screen.getByLabelText('تکرار رمز عبور جدید')
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('تکرار رمز عبور جدید')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'تغییر رمز عبور' })
     ).toBeInTheDocument();
@@ -78,10 +76,7 @@ describe('ResetPasswordForm', () => {
     const user = userEvent.setup();
     renderResetPasswordForm();
 
-    await user.type(
-      screen.getByLabelText('رمز عبور جدید'),
-      'StrongPass123!'
-    );
+    await user.type(screen.getByLabelText('رمز عبور جدید'), 'StrongPass123!');
     await user.type(
       screen.getByLabelText('تکرار رمز عبور جدید'),
       'DifferentPass123!'
@@ -101,10 +96,7 @@ describe('ResetPasswordForm', () => {
 
     renderResetPasswordForm({ onSuccess });
 
-    await user.type(
-      screen.getByLabelText('رمز عبور جدید'),
-      'StrongPass123!'
-    );
+    await user.type(screen.getByLabelText('رمز عبور جدید'), 'StrongPass123!');
     await user.type(
       screen.getByLabelText('تکرار رمز عبور جدید'),
       'StrongPass123!'
@@ -131,10 +123,7 @@ describe('ResetPasswordForm', () => {
 
     renderResetPasswordForm({ onError });
 
-    await user.type(
-      screen.getByLabelText('رمز عبور جدید'),
-      'OldPassword123!'
-    );
+    await user.type(screen.getByLabelText('رمز عبور جدید'), 'OldPassword123!');
     await user.type(
       screen.getByLabelText('تکرار رمز عبور جدید'),
       'OldPassword123!'
@@ -158,10 +147,7 @@ describe('ResetPasswordForm', () => {
 
     renderResetPasswordForm({ onError });
 
-    await user.type(
-      screen.getByLabelText('رمز عبور جدید'),
-      'StrongPass123!'
-    );
+    await user.type(screen.getByLabelText('رمز عبور جدید'), 'StrongPass123!');
     await user.type(
       screen.getByLabelText('تکرار رمز عبور جدید'),
       'StrongPass123!'

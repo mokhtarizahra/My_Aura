@@ -20,10 +20,7 @@ interface UsePasswordOptions {
  * proves they know the new password.
  */
 export function usePassword(options?: UsePasswordOptions) {
-  const setPassword = async (
-    verificationToken: string,
-    password: string
-  ) => {
+  const setPassword = async (verificationToken: string, password: string) => {
     try {
       await passwordService.setPassword(verificationToken, password);
       return { success: true as const };

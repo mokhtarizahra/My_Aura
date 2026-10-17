@@ -22,8 +22,8 @@ import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/constants/routes';
 import { useOTP } from '@/hooks/authentication/useOTP';
 import { useRouter } from '@/i18n/navigation';
+import { toEnglishDigits } from '@/lib/numbers';
 import { OTPPurpose } from '@/types/auth';
-import { toEnglishDigits } from '@/lib/numbers'; 
 
 // ─── Validation Schema Factory ──────────────────────────────────
 const createOtpSchema = (t: (key: string) => string) =>
@@ -33,7 +33,7 @@ const createOtpSchema = (t: (key: string) => string) =>
       z
         .string()
         .length(4, t('codeLength'))
-        .regex(/^\d{4}$/, t('codeNumeric')),
+        .regex(/^\d{4}$/, t('codeNumeric'))
     ),
   });
 type OTPFormValues = z.infer<ReturnType<typeof createOtpSchema>>;

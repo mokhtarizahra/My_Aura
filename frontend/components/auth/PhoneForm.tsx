@@ -22,8 +22,8 @@ import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/constants/routes';
 import { usePhone } from '@/hooks/authentication/usePhone';
 import { Link } from '@/i18n/navigation';
-import { OTPPurpose } from '@/types/auth';
 import { toEnglishDigits } from '@/lib/numbers';
+import { OTPPurpose } from '@/types/auth';
 
 // ─── Validation Schema Factory ──────────────────────────────────
 const createPhoneSchema = (t: (key: string) => string) =>
@@ -34,7 +34,7 @@ const createPhoneSchema = (t: (key: string) => string) =>
         .string()
         .trim()
         .min(1, t('identifierRequired'))
-        .regex(/^09\d{9}$/, t('identifierInvalid')),
+        .regex(/^09\d{9}$/, t('identifierInvalid'))
     ),
   });
 

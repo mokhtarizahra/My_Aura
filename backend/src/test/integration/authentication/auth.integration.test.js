@@ -466,7 +466,7 @@ describe("Authentication Integration", () => {
         code: "ACCESS_TOKEN_INVALID_OR_EXPIRED",
         message: "Invalid or expired access token",
       });
-    }); 
+    });
     it("should reject a refresh token used as an access token", async () => {
       await createPersonalAccount();
 

@@ -2,7 +2,7 @@
 
 import { LoginForm } from '@/components/auth/LoginForm';
 import { useAccountTypeRedirect } from '@/hooks/useAccountTypeRedirect';
-import { AccountType } from '@/types/auth';      
+import { AccountType } from '@/types/auth';
 
 export default function LoginPage() {
   const { redirectByAccountType } = useAccountTypeRedirect();

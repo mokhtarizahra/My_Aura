@@ -25,7 +25,10 @@ const renderCompleteRegistrationForm = (
 ) => {
   return render(
     <NextIntlClientProvider locale="fa" messages={faMessages}>
-      <CompleteRegistrationForm verificationToken="mock-verification-token" {...props} />
+      <CompleteRegistrationForm
+        verificationToken="mock-verification-token"
+        {...props}
+      />
     </NextIntlClientProvider>
   );
 };
@@ -58,7 +61,9 @@ describe('CompleteRegistrationForm', () => {
     expect(screen.getByLabelText('نام خانوادگی')).toBeInTheDocument();
     expect(screen.getByLabelText('رمز عبور')).toBeInTheDocument();
     expect(screen.getByLabelText('تکرار رمز عبور')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ایجاد حساب' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'ایجاد حساب' })
+    ).toBeInTheDocument();
   });
 
   it('shows validation errors for empty submit', async () => {
@@ -68,9 +73,13 @@ describe('CompleteRegistrationForm', () => {
     await user.click(screen.getByRole('button', { name: 'ایجاد حساب' }));
 
     expect(await screen.findByText('نام الزامی است')).toBeInTheDocument();
-    expect(await screen.findByText('نام خانوادگی الزامی است')).toBeInTheDocument();
+    expect(
+      await screen.findByText('نام خانوادگی الزامی است')
+    ).toBeInTheDocument();
     expect(await screen.findByText('رمز عبور الزامی است')).toBeInTheDocument();
-    expect(await screen.findByText('تکرار رمز عبور الزامی است')).toBeInTheDocument();
+    expect(
+      await screen.findByText('تکرار رمز عبور الزامی است')
+    ).toBeInTheDocument();
   });
 
   it('shows error when passwords do not match', async () => {
@@ -80,10 +89,15 @@ describe('CompleteRegistrationForm', () => {
     await user.type(screen.getByLabelText('نام'), 'علی');
     await user.type(screen.getByLabelText('نام خانوادگی'), 'رضایی');
     await user.type(screen.getByLabelText('رمز عبور'), 'StrongPass123!');
-    await user.type(screen.getByLabelText('تکرار رمز عبور'), 'DifferentPass123!');
+    await user.type(
+      screen.getByLabelText('تکرار رمز عبور'),
+      'DifferentPass123!'
+    );
     await user.click(screen.getByRole('button', { name: 'ایجاد حساب' }));
 
-    expect(await screen.findByText('رمز عبور و تکرار آن یکسان نیستند')).toBeInTheDocument();
+    expect(
+      await screen.findByText('رمز عبور و تکرار آن یکسان نیستند')
+    ).toBeInTheDocument();
   });
 
   it('calls register and onSuccess on successful submission', async () => {
@@ -128,7 +142,9 @@ describe('CompleteRegistrationForm', () => {
     await user.type(screen.getByLabelText('تکرار رمز عبور'), 'StrongPass123!');
     await user.click(screen.getByRole('button', { name: 'ایجاد حساب' }));
 
-    expect(await screen.findByText('ACCOUNT_ALREADY_EXISTS')).toBeInTheDocument();
+    expect(
+      await screen.findByText('ACCOUNT_ALREADY_EXISTS')
+    ).toBeInTheDocument();
     expect(onError).toHaveBeenCalledWith('ACCOUNT_ALREADY_EXISTS');
   });
 });

@@ -53,8 +53,8 @@ export function useRegistration(options?: UseRegistrationOptions) {
 
       return {
         success: true as const,
-  session: result.data.session,
-  accessToken: result.data.accessToken,
+        session: result.data.session,
+        accessToken: result.data.accessToken,
       };
     } catch (err) {
       const errorCode = err instanceof Error ? err.message : 'NETWORK_ERROR';

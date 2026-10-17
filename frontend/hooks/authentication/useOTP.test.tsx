@@ -2,8 +2,8 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as otpService from '@/services/authentication/otp.service';
 import faMessages from '@/messages/fa.json';
+import * as otpService from '@/services/authentication/otp.service';
 
 import { useToast } from '../use-toast';
 import { useOTP } from './useOTP';

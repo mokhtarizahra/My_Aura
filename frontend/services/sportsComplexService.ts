@@ -1,5 +1,5 @@
-import api from '@/lib/client';
 import { CATEGORIES } from '@/constants/categories';
+import api from '@/lib/client';
 import {
   CategoryDisplay,
   Coach,

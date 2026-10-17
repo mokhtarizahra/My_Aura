@@ -3,7 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Lock, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -22,8 +21,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/hooks/authentication/useAuth';
-import { AccountType } from '@/types/auth';
+import { Link } from '@/i18n/navigation';
 import { toEnglishDigits } from '@/lib/numbers';
+import { AccountType } from '@/types/auth';
 
 // ─── Validation Schema Factory ──────────────────────────────────────────────
 const createLoginSchema = (t: (key: string) => string) =>
@@ -36,12 +36,9 @@ const createLoginSchema = (t: (key: string) => string) =>
         .min(1, t('identifierRequired'))
         .refine((val) => /^(?:\+98|0)?9\d{9}$/.test(val), {
           message: t('identifierInvalid'),
-        }),
+        })
     ),
-    password: z
-      .string()
-      .min(1, t('passwordRequired'))
-      .min(6, t('passwordMin')),
+    password: z.string().min(1, t('passwordRequired')).min(6, t('passwordMin')),
   });
 
 type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>;
@@ -77,14 +74,14 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
       const response = await loginWithPassword(data.phone, data.password);
 
       if (!response.success) {
-  throw new Error(response.code || 'LOGIN_FAILED');
-}
-const accountType = response.data.session.accountType;
+        throw new Error(response.code || 'LOGIN_FAILED');
+      }
+      const accountType = response.data.session.accountType;
 
       if (onSuccess) {
         await onSuccess(accountType);
       }
-        } catch (err: any) {
+    } catch (err: any) {
       const errorCode = err.message || 'UNKNOWN_ERROR';
 
       // Map backend error codes to translation keys

@@ -2,12 +2,12 @@
 
 import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
 
-import { useRouter } from '@/i18n/navigation';
+import { Suspense } from 'react';
 
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { ROUTES } from '@/constants/routes';
+import { useRouter } from '@/i18n/navigation';
 
 function ResetPasswordContent() {
   const router = useRouter();

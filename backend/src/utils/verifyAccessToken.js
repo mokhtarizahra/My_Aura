@@ -14,7 +14,8 @@ export const verifyAccessToken = (token) => {
 
   const verifyOptions = { algorithms: [JWT_ALGORITHM] };
   if (process.env.JWT_ISSUER) verifyOptions.issuer = process.env.JWT_ISSUER;
-  if (process.env.JWT_AUDIENCE) verifyOptions.audience = process.env.JWT_AUDIENCE;
+  if (process.env.JWT_AUDIENCE)
+    verifyOptions.audience = process.env.JWT_AUDIENCE;
 
   let payload;
   try {

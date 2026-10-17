@@ -60,18 +60,18 @@ export function ResetPasswordForm({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const { setPassword } = usePassword({
+  const { setPassword } = usePassword({
     onError: (code) => {
       const errorKeyMap: Record<string, string> = {
         PASSWORD_SAME_AS_OLD: 'errors.passwordSameAsOld',
         PASSWORD_TOO_SHORT: 'passwordMin',
       };
-      
+
       const translationKey = errorKeyMap[code];
       setErrorMessage(
         translationKey ? t(translationKey) : t('errors.resetFailed')
       );
-      
+
       onError?.(code);
     },
   });
@@ -212,13 +212,13 @@ export function ResetPasswordForm({
           </Button>
 
           <p className="text-sm text-muted-foreground text-center">
-  <Link
-    href={ROUTES.LOGIN}
-    className="text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-2"
-  >
-    {t('backToLogin')}
-  </Link>
-</p>
+            <Link
+              href={ROUTES.LOGIN}
+              className="text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-2"
+            >
+              {t('backToLogin')}
+            </Link>
+          </p>
         </CardFooter>
       </form>
     </Card>

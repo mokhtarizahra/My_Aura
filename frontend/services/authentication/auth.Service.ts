@@ -41,7 +41,8 @@ export const register = async (
       lastName,
       password,
     });
-    if (data.success === false) throw new Error(data.code || 'REGISTRATION_FAILED');
+    if (data.success === false)
+      throw new Error(data.code || 'REGISTRATION_FAILED');
     return data;
   } catch (err) {
     throw new Error(extractErrorCode(err));

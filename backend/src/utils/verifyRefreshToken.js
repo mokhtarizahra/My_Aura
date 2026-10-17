@@ -14,7 +14,8 @@ export const verifyRefreshToken = (token) => {
 
   const verifyOptions = { algorithms: [JWT_ALGORITHM] };
   if (process.env.JWT_ISSUER) verifyOptions.issuer = process.env.JWT_ISSUER;
-  if (process.env.JWT_AUDIENCE) verifyOptions.audience = process.env.JWT_AUDIENCE;
+  if (process.env.JWT_AUDIENCE)
+    verifyOptions.audience = process.env.JWT_AUDIENCE;
 
   let payload;
   try {
@@ -23,7 +24,8 @@ export const verifyRefreshToken = (token) => {
     throw authErrors.refreshTokenInvalidOrExpired();
   }
 
-  if (payload.tokenType !== "refresh") throw authErrors.refreshTokenInvalidType();
+  if (payload.tokenType !== "refresh")
+    throw authErrors.refreshTokenInvalidType();
   if (!payload.sub) throw authErrors.refreshTokenSubjectMissing();
 
   if (!["personal", "organization", "staff"].includes(payload.accountType)) {
