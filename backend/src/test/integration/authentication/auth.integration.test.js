@@ -236,6 +236,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "OTP_INVALID",
         message: "Invalid OTP",
       });
 
@@ -289,6 +290,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "VERIFICATION_TOKEN_INVALID_OR_EXPIRED",
         message: "Invalid or expired verification token",
       });
 
@@ -306,6 +308,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "ACCOUNT_ALREADY_EXISTS",
         message: "Account already exists",
       });
     });
@@ -359,6 +362,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "INVALID_CREDENTIALS",
         message: "Invalid credentials",
       });
 
@@ -385,6 +389,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "ACCOUNT_NOT_ACTIVE",
         message: "Account is not active",
       });
 
@@ -398,6 +403,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "INVALID_CREDENTIALS",
         message: "Invalid credentials",
       });
     });
@@ -443,6 +449,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "ACCESS_TOKEN_REQUIRED",
         message: "Access token required",
       });
     });
@@ -456,10 +463,10 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "ACCESS_TOKEN_INVALID_OR_EXPIRED",
         message: "Invalid or expired access token",
       });
-    });
-
+    }); 
     it("should reject a refresh token used as an access token", async () => {
       await createPersonalAccount();
 
@@ -475,6 +482,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "ACCESS_TOKEN_INVALID_TYPE",
         message: "Invalid access token type",
       });
     });
@@ -548,6 +556,7 @@ describe("Authentication Integration", () => {
 
       expect(secondRefresh.body).toEqual({
         success: false,
+        code: "REFRESH_TOKEN_REVOKED_OR_EXPIRED",
         message: "Refresh token revoked or expired",
       });
     });
@@ -559,6 +568,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "REFRESH_TOKEN_REQUIRED",
         message: "Refresh token is required",
       });
     });
@@ -618,6 +628,7 @@ describe("Authentication Integration", () => {
 
       expect(refreshResponse.body).toEqual({
         success: false,
+        code: "REFRESH_TOKEN_REVOKED_OR_EXPIRED",
         message: "Refresh token revoked or expired",
       });
     });
@@ -723,6 +734,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "SESSION_NOT_FOUND",
         message: "Session not found",
       });
     });
@@ -768,6 +780,7 @@ describe("Authentication Integration", () => {
 
       expect(response.body).toEqual({
         success: false,
+        code: "ACCESS_TOKEN_REQUIRED",
         message: "Access token required",
       });
     });

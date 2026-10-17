@@ -1,44 +1,48 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+
+import { Suspense } from 'react';
 
 import { OTPForm } from '@/components/auth/OTPForm';
 import { ROUTES } from '@/constants/routes';
+import { useRouter } from '@/i18n/navigation';
+import { OTPPurpose } from '@/types/auth';
 
 function OTPPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const phone = searchParams.get('phone');
+  const purposeParam = searchParams.get('purpose');
+  const purpose: OTPPurpose =
+    purposeParam === 'password_reset' ? 'password_reset' : 'registration';
 
-  useEffect(() => {
-    if (!phone) {
-      router.replace(ROUTES.PHONE);
+  const handleSuccess = (verificationToken: string) => {
+    if (purpose === 'password_reset') {
+      router.push(
+        `${ROUTES.RESET_PASSWORD}?token=${encodeURIComponent(verificationToken)}`
+      );
+    } else {
+      router.push(
+        `${ROUTES.COMPLETE_REGISTRATION}?token=${encodeURIComponent(verificationToken)}`
+      );
     }
-  }, [phone, router]);
-
-  const handleOTPSuccess = () => {
-    console.log('OTP verified successfully');
   };
 
-  const handleOTPError = (error: Error) => {
-    console.error('OTP verification error:', error);
+  const handleError = (errorCode: string) => {
+    console.error('OTP error:', errorCode);
   };
 
-  if (!phone) {
-    return null;
-  }
+  if (!phone) return null;
 
   return (
-    <main
-      dir="rtl"
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50"
-    >
+    <main className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <OTPForm
         phone={phone}
-        onSuccess={handleOTPSuccess}
-        onError={handleOTPError}
+        purpose={purpose}
+        onSuccess={handleSuccess}
+        onError={handleError}
       />
     </main>
   );
@@ -48,11 +52,8 @@ export default function OTPPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-muted-foreground">در حال بارگذاری...</p>
-          </div>
+        <div className="min-h-screen w-full flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       }
     >

@@ -1,7 +1,9 @@
 'use client';
 
-import { AuthContext } from '@/context/authentication/AuthenticationProvider';
 import { useContext } from 'react';
+
+import { AuthContext } from '@/context/authentication/AuthenticationProvider';
+
 import { AuthContextType } from '../../types/auth';
 
 export function useAuth(): AuthContextType {

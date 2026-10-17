@@ -1,31 +1,33 @@
-// app/auth/phone/page.tsx
 'use client';
 
 import { PhoneForm } from '@/components/auth/PhoneForm';
+import { ROUTES } from '@/constants/routes';
+import { useRouter } from '@/i18n/navigation';
 
 /**
- * صفحه درخواست کد OTP
- * این صفحه فقط فرم را رندر می‌کند و هیچ منطقی ندارد
+ * Registration entry point.
+ *
+ * Collects the user's phone number, then redirects to the OTP page.
+ * The `purpose=registration` parameter tells the OTP page
+ * to send the user to /auth/complete-registration after verification.
  */
-export default function PhonePage() {
-  // ─── Handlers ──────────────────────────────────────────────────────────
+export default function RegisterPage() {
+  const router = useRouter();
+
   const handleSuccess = (phone: string) => {
-    // اینجا می‌توانید آنالیتیکس یا هر action دیگری اضافه کنید
-    console.log(`✅ OTP requested for phone: ${phone}`);
+    router.push(
+      `${ROUTES.OTP}?phone=${encodeURIComponent(phone)}&purpose=registration`
+    );
   };
 
-  const handleError = (error: Error) => {
-    // اینجا می‌توانید خطا را به سرویس مانیتورینگ بفرستید
-    console.error('❌ Phone request error:', error);
+  const handleError = (errorCode: string) => {
+    console.error('Phone request error:', errorCode);
   };
 
-  // ─── Render ──────────────────────────────────────────────────────────────
   return (
-    <main
-      dir="rtl"
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50"
-    >
+    <main className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <PhoneForm
+        purpose="registration"
         onSuccess={handleSuccess}
         onError={handleError}
       />

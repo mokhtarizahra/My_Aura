@@ -13,7 +13,7 @@ import { MESSAGES } from "../constants/messages.js";
 
 const identifierTypeSchema = z.enum(["phone", "email"], {
   errorMap: () => ({
-   message: MESSAGES.IDENTIFIER_TYPE_INVALID,
+    message: MESSAGES.IDENTIFIER_TYPE_INVALID,
   }),
 });
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { authErrors } from "../errors/authErrors.js";
 
 /*
  * --------------------------------------------------------------------------
@@ -180,7 +181,7 @@ describe("Authentication: authController", () => {
     });
 
     it("should return conflict when account already exists", async () => {
-      sendOTP.mockRejectedValue(new Error("Account already exists"));
+      sendOTP.mockRejectedValue(authErrors.accountAlreadyExists());
 
       const req = createReq({
         body: {
@@ -197,7 +198,7 @@ describe("Authentication: authController", () => {
     });
 
     it("should return rate-limit when OTP cooldown is active", async () => {
-      sendOTP.mockRejectedValue(new Error("OTP resend cooldown active"));
+      sendOTP.mockRejectedValue(authErrors.otpResendCooldown());
 
       const req = createReq({
         body: {
@@ -272,7 +273,7 @@ describe("Authentication: authController", () => {
     });
 
     it("should return 401 for invalid OTP", async () => {
-      verifyOTP.mockRejectedValue(new Error("Invalid OTP"));
+      verifyOTP.mockRejectedValue(authErrors.otpInvalid());
 
       const req = createReq({
         body: {
@@ -407,7 +408,7 @@ describe("Authentication: authController", () => {
 
     it("should return 401 for invalid verification token", async () => {
       verifyVerificationToken.mockImplementation(() => {
-        throw new Error("Invalid or expired verification token");
+        throw authErrors.verificationTokenInvalidOrExpired();
       });
 
       const req = createReq({
@@ -569,7 +570,7 @@ describe("Authentication: authController", () => {
       });
 
       requireActiveAccount.mockImplementation(() => {
-        throw new Error("Account is not active");
+        throw authErrors.accountNotActive();
       });
 
       const req = createReq({

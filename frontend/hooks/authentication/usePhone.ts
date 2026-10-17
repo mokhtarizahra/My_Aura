@@ -1,51 +1,59 @@
 'use client';
 
-import { ROUTES } from '@/constants/routes';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+
+import * as otpService from '@/services/authentication/otp.service';
+import { IdentifierType, OTPPurpose } from '@/types/auth';
+
 import { useToast } from '../use-toast';
-import { useAuth } from './useAuth';
 
 interface UsePhoneOptions {
-  onSuccess?: (phone: string) => void | Promise<void>;
-  onError?: (error: Error) => void;
+  onError?: (errorCode: string) => void;
 }
 
+/**
+ * Phone hook.
+ *
+ * Responsibilities:
+ *   - Call the OTP request service.
+ *   - Show toast notifications (translated).
+ *   - Return structured results to the caller.
+ *
+ * It does NOT redirect. Redirection is the page's responsibility.
+ */
 export function usePhone(options?: UsePhoneOptions) {
-  const router = useRouter();
   const { toast } = useToast();
-  const { requestOTP } = useAuth();
+  const t = useTranslations('Auth.phone');
 
-  const handleRequestOTP = async (phone: string) => {
+  const requestOTP = async (
+    identifier: string,
+    identifierType: IdentifierType = 'phone',
+    purpose: OTPPurpose = 'registration'
+  ) => {
     try {
-      await requestOTP(phone);
+      await otpService.requestOTP(identifier, identifierType, purpose);
 
       toast({
-        title: '✅ کد ارسال شد',
-        description: 'کد تأیید به شماره موبایل شما ارسال شد.',
+        title: t('toast.successTitle'),
+        description: t('toast.successDescription'),
       });
 
-      // Redirect to OTP page with phone parameter
-      router.push(`${ROUTES.OTP}?phone=${encodeURIComponent(phone)}`);
-
-      options?.onSuccess?.(phone);
-
-      return { success: true, phone };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'خطا در ارسال کد تأیید';
+      return { success: true as const };
+    } catch (err) {
+      const errorCode = err instanceof Error ? err.message : 'NETWORK_ERROR';
 
       toast({
-        title: '❌ خطا',
-        description: errorMessage,
+        title: t('toast.errorTitle'),
+        description: errorCode, // ← کد خطا، نه متن
         variant: 'destructive',
       });
 
-      options?.onError?.(error instanceof Error ? error : new Error(errorMessage));
-
-      return { success: false, error: errorMessage };
+      options?.onError?.(errorCode);
+      return { success: false as const, error: errorCode };
     }
   };
 
   return {
-    requestOTP: handleRequestOTP,
+    requestOTP,
   };
 }

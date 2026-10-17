@@ -1,8 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+
 import { Button } from '@/components/ui/button';
-import { ROUTES } from '@/constants/routes'; // ✅ ایمپورت
+import { ROUTES } from '@/constants/routes';
+
+// ✅ ایمپورت
 
 export default function ForbiddenPage() {
   const router = useRouter();

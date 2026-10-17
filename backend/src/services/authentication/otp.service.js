@@ -1,12 +1,10 @@
 import PersonalAccount from "../../models/account/PersonalAccount.js";
 import TempOTP from "../../models/authentication/TempOTP.js";
-
 import { generateOTP } from "../../utils/generateOTP.js";
 import { compareOTP, hashOTP } from "../../utils/hashOTP.js";
-
 import { generateVerificationToken } from "./token.service.js";
-
 import { sendEmailOTP, sendSMS } from "./sms.service.js";
+import { authErrors } from "../../errors/authErrors.js";
 
 const OTP_EXPIRATION_MS = 2 * 60 * 1000;
 
@@ -26,21 +24,21 @@ const VALID_PURPOSES = [
 // Validate identifier type.
 const validateIdentifierType = (identifierType) => {
   if (!VALID_IDENTIFIER_TYPES.includes(identifierType)) {
-    throw new Error("Invalid identifier type");
+    throw authErrors.identifierTypeInvalid();
   }
 };
 
 // Validate OTP purpose.
 const validatePurpose = (purpose) => {
   if (!VALID_PURPOSES.includes(purpose)) {
-    throw new Error("Invalid OTP purpose");
+    throw authErrors.otpPurposeInvalid();
   }
 };
 
 // Validate identifier.
 const validateIdentifier = (identifier) => {
   if (typeof identifier !== "string" || !identifier.trim()) {
-    throw new Error("Identifier is required");
+    	throw authErrors.identifierRequired();
   }
 
   return identifier.trim();
@@ -75,7 +73,7 @@ const checkResendCooldown = async ({ identifier, purpose }) => {
   const elapsed = Date.now() - new Date(updatedAt).getTime();
 
   if (elapsed < OTP_RESEND_COOLDOWN_MS) {
-    throw new Error("OTP resend cooldown active");
+    throw authErrors.otpResendCooldown();
   }
 };
 
@@ -104,7 +102,7 @@ export const sendOTP = async ({
     });
 
     if (account) {
-      throw new Error("Account already exists");
+      	throw authErrors.accountAlreadyExists();
     }
   }
 
@@ -119,7 +117,7 @@ export const sendOTP = async ({
     });
 
     if (!account) {
-      throw new Error("Account not found");
+      throw authErrors.accountNotFound();
     }
   }
 
@@ -188,7 +186,7 @@ export const verifyOTP = async ({
   validatePurpose(purpose);
 
   if (typeof otp !== "string" && typeof otp !== "number") {
-    throw new Error("Invalid OTP");
+    throw authErrors.otpInvalid();
   }
 
   const normalizedOTP = String(otp);
@@ -204,7 +202,7 @@ export const verifyOTP = async ({
   }).select("+otpHash");
 
   if (!otpRecord) {
-    throw new Error("Invalid or expired OTP request");
+    throw authErrors.otpInvalidOrExpired();
   }
 
   /*
@@ -215,7 +213,7 @@ export const verifyOTP = async ({
       _id: otpRecord._id,
     });
 
-    throw new Error("OTP expired");
+    throw authErrors.otpExpired()
   }
 
   /*
@@ -226,7 +224,7 @@ export const verifyOTP = async ({
       _id: otpRecord._id,
     });
 
-    throw new Error("Maximum OTP attempts exceeded");
+    throw authErrors.otpMaxAttemptsExceeded();
   }
 
   const isValid = await compareOTP(normalizedOTP, otpRecord.otpHash);
@@ -241,7 +239,7 @@ export const verifyOTP = async ({
 
     await otpRecord.save();
 
-    throw new Error("Invalid OTP");
+    throw authErrors.otpInvalid();
   }
 
   /*

@@ -1,10 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { NextIntlClientProvider } from 'next-intl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import React from 'react';
 
 import { usePhone } from '@/hooks/authentication/usePhone';
+import faMessages from '@/messages/fa.json';
 
 import { PhoneForm } from './PhoneForm';
 
@@ -19,7 +21,11 @@ vi.mock('@/hooks/authentication/usePhone', () => ({
 const renderPhoneForm = (
   props: React.ComponentProps<typeof PhoneForm> = {}
 ) => {
-  return render(<PhoneForm {...props} />);
+  return render(
+    <NextIntlClientProvider locale="fa" messages={faMessages}>
+      <PhoneForm {...props} />
+    </NextIntlClientProvider>
+  );
 };
 
 // Test Suite

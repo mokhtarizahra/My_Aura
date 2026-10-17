@@ -22,15 +22,57 @@
     "PASSWORD_TOO_LONG": "پسورد بیش از حد طولانی است"
   },
 
+  "AccountType": {
+  "personal": "کاربر عادی",
+  "organization": "سازمان",
+  "staff": "کارمند"
+},
+
   "Auth": {
-    "login": {
-      "title": "ورود به حساب",
-      "identifier": "شماره موبایل یا ایمیل",
-      "password": "پسورد",
-      "submit": "ورود",
-      "noAccount": "حساب ندارید؟",
-      "register": "ثبت‌نام کنید"
+  "login": {
+  "title": "خوش آمدید",
+  "description": "برای ادامه، وارد حساب کاربری خود شوید",
+  "identifier": "شماره موبایل",
+  "identifierPlaceholder": "09123456789",
+  "identifierRequired": "شماره موبایل الزامی است",
+  "identifierInvalid": "شماره موبایل معتبر ایرانی وارد کنید",
+  "password": "رمز عبور",
+  "passwordPlaceholder": "••••••••",
+  "passwordRequired": "رمز عبور الزامی است",
+  "passwordMin": "رمز عبور باید حداقل ۶ کاراکتر باشد",
+  "submit": "ورود",
+  "submitting": "در حال ورود…",
+  "noAccount": "حساب کاربری ندارید؟",
+  "register": "ثبت‌نام کنید",
+  "showPassword": "نمایش رمز عبور",
+  "hidePassword": "مخفی کردن رمز عبور",
+  "errors": {
+    "invalidCredentials": "نام کاربری یا رمز عبور نادرست است.",
+    "accountNotActive": "حساب کاربری شما هنوز فعال نشده است.",
+    "loginFailed": "خطا در ورود",
+    "generic": "خطایی رخ داده است. دوباره تلاش کنید."
+  }
+},
+"phone": {
+    "title": "ورود به حساب کاربری",
+    "description": "شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود",
+    "identifier": "شماره موبایل",
+    "identifierPlaceholder": "09123456789",
+    "identifierRequired": "شماره موبایل الزامی است",
+    "identifierInvalid": "شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد",
+    "submit": "ارسال کد تأیید",
+    "submitting": "در حال ارسال...",
+    "alreadyRegistered": "قبلاً ثبت‌نام کرده‌اید؟",
+    "login": "وارد شوید",
+    "errors": {
+      "sendFailed": "خطا در ارسال کد تأیید"
     },
+    "toast": {
+  "successTitle": "کد ارسال شد",
+  "successDescription": "کد تأیید به شماره موبایل شما ارسال شد.",
+  "errorTitle": "خطا"
+}
+  },
     "register": {
       "title": "ثبت‌نام",
       "firstName": "نام",
@@ -39,10 +81,85 @@
       "submit": "ثبت‌نام"
     },
     "otp": {
-      "title": "کد تایید",
-      "description": "کد ۶ رقمی ارسال‌شده را وارد کنید",
-      "submit": "تایید",
-      "resend": "ارسال دوباره کد"
-    }
+  "title": "ورود با کد یکبارمصرف",
+  "description": "کد تأیید ۴ رقمی ارسال شده را وارد کنید",
+  "codeSentTo": "کد به این شماره ارسال شد:",
+  "code": "کد تأیید",
+  "codePlaceholder": "مثلاً 1234",
+  "codeLength": "کد باید دقیقاً ۴ رقم باشد",
+  "codeNumeric": "کد باید فقط شامل اعداد باشد",
+  "verify": "تأیید کد",
+  "verifying": "در حال بررسی...",
+  "noCode": "کد را دریافت نکردید؟",
+  "resend": "ارسال مجدد",
+  "resending": "ارسال مجدد...",
+  "alreadyRegistered": "قبلاً ثبت‌نام کرده‌اید؟",
+  "login": "وارد شوید",
+  "errors": {
+    "verifyFailed": "خطا در تأیید کد",
+    "resendFailed": "خطا در ارسال مجدد"
+  },
+  "toast": {
+  "successTitle": "تأیید موفق",
+  "successDescription": "کد یکبارمصرف با موفقیت تأیید شد.",
+  "errorTitle": "خطا در تأیید"
+}
+},
+"completeRegistration": {
+  "title": "تکمیل ثبت‌نام",
+  "description": "برای ساخت حساب، اطلاعات زیر را وارد کنید",
+  "firstName": "نام",
+  "firstNamePlaceholder": "نام خود را وارد کنید",
+  "firstNameRequired": "نام الزامی است",
+  "firstNameMin": "نام باید حداقل ۲ کاراکتر باشد",
+  "lastName": "نام خانوادگی",
+  "lastNamePlaceholder": "نام خانوادگی خود را وارد کنید",
+  "lastNameRequired": "نام خانوادگی الزامی است",
+  "lastNameMin": "نام خانوادگی باید حداقل ۲ کاراکتر باشد",
+  "password": "رمز عبور",
+  "passwordPlaceholder": "••••••••",
+  "passwordRequired": "رمز عبور الزامی است",
+  "passwordMin": "رمز عبور باید حداقل ۸ کاراکتر باشد",
+  "passwordWeak": "رمز عبور باید شامل حرف و عدد باشد",
+  "confirmPassword": "تکرار رمز عبور",
+  "confirmPasswordPlaceholder": "••••••••",
+  "confirmPasswordRequired": "تکرار رمز عبور الزامی است",
+  "confirmPasswordMismatch": "رمز عبور و تکرار آن یکسان نیستند",
+  "showPassword": "نمایش رمز عبور",
+  "hidePassword": "مخفی کردن رمز عبور",
+  "submit": "ایجاد حساب",
+  "submitting": "در حال ایجاد حساب...",
+  "hasAccount": "قبلاً ثبت‌نام کرده‌اید؟",
+  "login": "وارد شوید",
+  "errors": {
+    "registrationFailed": "خطا در ثبت‌نام"
+  }
+},
+"resetPassword": {
+  "title": "تعیین رمز عبور جدید",
+  "description": "رمز عبور جدید خود را وارد کنید",
+  "password": "رمز عبور جدید",
+  "passwordPlaceholder": "••••••••",
+  "passwordRequired": "رمز عبور الزامی است",
+  "passwordMin": "رمز عبور باید حداقل ۸ کاراکتر باشد",
+  "passwordWeak": "رمز عبور باید شامل حرف و عدد باشد",
+  "confirmPassword": "تکرار رمز عبور جدید",
+  "confirmPasswordPlaceholder": "••••••••",
+  "confirmPasswordRequired": "تکرار رمز عبور الزامی است",
+  "confirmPasswordMismatch": "رمز عبور و تکرار آن یکسان نیستند",
+  "showPassword": "نمایش رمز عبور",
+  "hidePassword": "مخفی کردن رمز عبور",
+  "submit": "تغییر رمز عبور",
+  "submitting": "در حال تغییر...",
+  "backToLogin": "بازگشت به صفحه ورود",
+  "errors": {
+    "resetFailed": "خطا در تغییر رمز عبور",
+    "passwordSameAsOld": "رمز عبور جدید باید با رمز قبلی متفاوت باشد"
+  }
+},
+"redirect": {
+  "errorTitle": "خطا",
+  "invalidAccountType": "شما دسترسی لازم برای این صفحه را ندارید."
+}
   }
 }

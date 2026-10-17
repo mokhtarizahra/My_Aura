@@ -1,40 +1,24 @@
-import { getRequestConfig } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { getRequestConfig } from 'next-intl/server';
+import { locale as getRootLocale } from 'next/root-params';
 
-/**
- * Locales supported by the application.
- * Add new locales here and create a matching JSON file under /messages.
- */
-export const locales = ["fa" , "en"] as const;
-export type Locale = (typeof locales)[number];
+import { routing } from './routing';
 
-/**
- * Default locale used when no locale can be determined
- * from the URL or user preferences.
- */
-export const defaultLocale: Locale = "fa";
+export default getRequestConfig(async () => {
+  const locale = await getRootLocale();
 
-/**
- * Type guard to ensure a string is a supported locale.
- */
-export function isLocale(value: unknown): value is Locale {
-  return typeof value === "string" && locales.includes(value as Locale);
-}
-
-/**
- * next-intl request configuration.
- *
- * For each incoming request, load the translation messages
- * matching the resolved locale.
- */
-export default getRequestConfig(async ({ locale }) => {
-  // If the locale is not one of the supported ones, return 404.
-  if (!isLocale(locale)) {
-    notFound();
+  if (
+    !locale ||
+    !routing.locales.includes(locale as (typeof routing.locales)[number])
+  ) {
+    return {
+      locale: routing.defaultLocale,
+      messages: (await import(`../messages/${routing.defaultLocale}.json`))
+        .default,
+    };
   }
 
   return {
-    locale, 
+    locale,
     messages: (await import(`../messages/${locale}.json`)).default,
   };
 });

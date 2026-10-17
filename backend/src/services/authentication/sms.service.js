@@ -1,8 +1,9 @@
 import { sendVerificationCode } from "../../utils/smsProvider.js";
+import { authErrors } from "../../errors/authErrors.js";
 
 const normalizeIdentifier = (identifier) => {
   if (typeof identifier !== "string" || !identifier.trim()) {
-    throw new Error("Identifier is required");
+    throw authErrors.identifierRequired();
   }
 
   return identifier.trim();
@@ -10,13 +11,13 @@ const normalizeIdentifier = (identifier) => {
 
 const validateOTP = (otp) => {
   if (typeof otp !== "string" && typeof otp !== "number") {
-    throw new Error("Invalid OTP");
+    throw authErrors.otpInvalid();
   }
 
   const normalizedOTP = String(otp);
 
   if (!/^\d{4,8}$/.test(normalizedOTP)) {
-    throw new Error("Invalid OTP format");
+    throw authErrors.otpFormatInvalid();
   }
 
   return normalizedOTP;
@@ -43,9 +44,14 @@ export const sendSMS = async (identifier, otp) => {
    * });
    */
 
-  if (process.env.NODE_ENV === "test") {
+    /*
+   * In development, log the OTP and skip sending real SMS.
+   * In test, log it too.
+   * In production, send real SMS.
+   */
+  if (process.env.NODE_ENV !== "production") {
     console.log(
-      `[TEST] SMS would be sent to ${phone} with code ${normalizedOTP}`,
+      `[DEV] SMS to ${phone} — OTP: ${normalizedOTP}`,
     );
     return {
       success: true,
@@ -54,8 +60,14 @@ export const sendSMS = async (identifier, otp) => {
     };
   }
 
-  // ارسال واقعی از طریق sms.ir
-  const result = await sendVerificationCode(phone, normalizedOTP);
+   // ارسال واقعی از طریق sms.ir
+  let result;
+  try {
+    result = await sendVerificationCode(phone, normalizedOTP);
+  } catch (err) {
+    console.error('[SMS.ir] Send failed:', err?.message || err);
+    throw authErrors.smsSendFailed();
+  }
 
   return {
     success: true,
@@ -93,8 +105,8 @@ export const sendEmailOTP = async (identifier, otp) => {
    * });
    */
 
-  if (process.env.NODE_ENV !== "test") {
-    console.log(`[EMAIL] OTP prepared for ${email}`);
+    if (process.env.NODE_ENV !== "production") {
+    console.log(`[DEV] Email to ${email} — OTP: ${normalizedOTP}`);
   }
 
   return {

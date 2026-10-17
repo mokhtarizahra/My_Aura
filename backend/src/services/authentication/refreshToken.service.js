@@ -3,18 +3,19 @@ import jwt from "jsonwebtoken";
 import RefreshToken from "../../models/authentication/RefreshToken.js";
 import { hashToken } from "../../utils/hashToken.js";
 import { generateRefreshToken, TOKEN_CONFIG } from "./token.service.js";
+import { authErrors } from "../../errors/authErrors.js";
 
 const ACCOUNT_TYPES = TOKEN_CONFIG.ACCOUNT_TYPES;
 
 const validateAccountId = (accountId) => {
   if (!accountId) {
-    throw new Error("Account ID is required");
+    throw authErrors.accountIdRequired();
   }
 };
 
 const validateAccountType = (accountType) => {
   if (!ACCOUNT_TYPES.includes(accountType)) {
-    throw new Error("Invalid account type");
+    throw authErrors.accountTypeInvalid();
   }
 };
 
@@ -30,7 +31,7 @@ const getRefreshTokenLifetimeMs = () => {
   const match = /^(\d+)([smhd])$/.exec(value);
 
   if (!match) {
-    throw new Error("Invalid refresh token expiration configuration");
+    throw authErrors.refreshTokenExpirationInvalid();
   }
 
   const amount = Number(match[1]);
@@ -88,7 +89,7 @@ export const createRefreshToken = async ({
  */
 export const validateRefreshToken = async (refreshToken) => {
   if (!refreshToken) {
-    throw new Error("Refresh token is required");
+    throw authErrors.refreshTokenRequired();
   }
 
   let payload;
@@ -100,19 +101,19 @@ export const validateRefreshToken = async (refreshToken) => {
       audience: process.env.JWT_AUDIENCE,
     });
   } catch {
-    throw new Error("Invalid refresh token");
+    throw authErrors.refreshTokenInvalid();
   }
 
   if (payload.tokenType !== "refresh") {
-    throw new Error("Invalid token type");
+    throw authErrors.refreshTokenInvalidType();
   }
 
   if (!payload.sub) {
-    throw new Error("Invalid refresh token subject");
+    throw authErrors.refreshTokenInvalidSubject();
   }
 
   if (!payload.accountType) {
-    throw new Error("Invalid refresh token account type");
+    throw authErrors.refreshTokenInvalidAccountType();
   }
 
   validateAccountType(payload.accountType);
@@ -130,7 +131,7 @@ export const validateRefreshToken = async (refreshToken) => {
   }).select("+tokenHash");
 
   if (!storedToken) {
-    throw new Error("Refresh token revoked or expired");
+    throw authErrors.refreshTokenRevokedOrExpired();
   }
 
   return {
@@ -171,7 +172,7 @@ export const rotateRefreshToken = async ({
  */
 export const revokeRefreshToken = async (refreshToken) => {
   if (!refreshToken) {
-    throw new Error("Refresh token is required");
+    throw authErrors.refreshTokenRequired();
   }
 
   const tokenHash = hashToken(refreshToken);

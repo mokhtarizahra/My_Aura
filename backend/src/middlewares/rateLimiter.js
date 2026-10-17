@@ -1,12 +1,17 @@
 import rateLimit from "express-rate-limit";
 
 /**
- * OTP request limiter
- * Preventing SMS/Email bombing
+ * In the test environment, we keep the rate limiter ACTIVE (to ensure
+ * it's wired correctly), but we increase the max requests significantly
+ * so automated tests do not hit the 429 limit.
  */
+const getLimit = (productionLimit) => {
+  return process.env.NODE_ENV === "test" ? 10000 : productionLimit;
+};
+
 export const otpLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // ۱۵ دقیقه
-  max: 5,
+  windowMs: 15 * 60 * 1000,
+  max: getLimit(5), // 👈 در تست ۱۰۰۰۰، در پروداکشن ۵
   message: {
     success: false,
     message: "Too many OTP requests. Try again later.",
@@ -15,13 +20,9 @@ export const otpLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-/**
- * OTP verify limiter
- * Preventing 6-digit code brute-force attacks
- */
 export const otpVerifyLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // ۱۰ دقیقه
-  max: 5,
+  windowMs: 10 * 60 * 1000,
+  max: getLimit(5),
   message: {
     success: false,
     message: "Too many verification attempts. Try again later.",
@@ -30,13 +31,9 @@ export const otpVerifyLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-/**
- * Login limiter
- * Preventing password brute-force attacks
- */
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: getLimit(5),
   message: {
     success: false,
     message: "Too many login attempts. Try again later.",
@@ -45,13 +42,9 @@ export const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-/**
- * Register limiter
- * Preventing mass account creation
- */
 export const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // ۱ ساعت
-  max: 3,
+  windowMs: 60 * 60 * 1000,
+  max: getLimit(3),
   message: {
     success: false,
     message: "Too many accounts created. Try again later.",
@@ -60,13 +53,9 @@ export const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-/**
- * Password reset limiter
- * Preventing recovery token brute-force attacks
- */
 export const passwordResetLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 3,
+  max: getLimit(3),
   message: {
     success: false,
     message: "Too many password reset attempts. Try again later.",
@@ -75,13 +64,9 @@ export const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-/**
- * Refresh limiter
- * Preventing refresh token abuse
- */
 export const refreshLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30, // چون refresh معمولاً زیاد صدا زده می‌شود، عدد بالاتر
+  max: getLimit(30),
   message: {
     success: false,
     message: "Too many refresh attempts. Try again later.",

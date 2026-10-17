@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { authErrors } from "../../errors/authErrors.js";
 
 vi.mock("../../models/identity/PersonalUser.js", () => ({
   default: {

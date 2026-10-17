@@ -1,9 +1,11 @@
-import { ROUTES } from '@/constants/routes';
 import axios, {
   AxiosError,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
+
+import { ROUTES } from '@/constants/routes';
+
 import { storage } from './storage';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -58,12 +60,12 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
 
-     if (error.response?.status === 403) {
+    if (error.response?.status === 403) {
       // Run only in a browser environment
       if (typeof window !== 'undefined') {
         // Clearing tokens (optional – since the user does not have access)
         storage.removeAccessToken();
-        
+
         // Go to page 403
         window.location.href = ROUTES.FORBIDDEN;
       }
@@ -93,19 +95,18 @@ api.interceptors.response.use(
 
       try {
         // Create a temporary axios instance without interceptors to avoid infinite loop
-        const refreshResponse = await axios.post(
-          `${API_URL}/auth/refresh`,
-          { withCredentials: true }
-        );
+        const refreshResponse = await axios.post(`${API_URL}/auth/refresh`, {
+          withCredentials: true,
+        });
 
-        const { accessToken} = refreshResponse.data.data;
+        const { accessToken } = refreshResponse.data.data;
 
         // Update tokens in storage
         storage.setAccessToken(accessToken);
 
         window.dispatchEvent(
           new CustomEvent('tokensRefreshed', {
-            detail: { accessToken},
+            detail: { accessToken },
           })
         );
         // Process queued requests

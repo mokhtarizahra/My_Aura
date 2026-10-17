@@ -1,5 +1,7 @@
 'use client';
 
+import axios from 'axios';
+
 import {
   ReactNode,
   createContext,
@@ -11,59 +13,62 @@ import {
 
 import { storage } from '@/lib/storage';
 import * as authService from '@/services/authentication/auth.Service';
+import * as sessionService from '@/services/authentication/session.service';
 import {
+  AccountType,
   AuthContextType,
   AuthResponse,
+  IdentifierType,
   MessageResponse,
+  Session,
   SessionsResponse,
-  User,
-  VerifyOTPResponse,
 } from '@/types/auth';
 
-import axios from 'axios';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [resetToken, setResetToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ─── Bootstrap: restore session on mount ────────────────────────
   useEffect(() => {
-  const bootstrap = async () => {
-    const storedUser = storage.getUser();
-    const storedAccess = storage.getAccessToken();
-    const storedReset = storage.getResetToken();
+    const bootstrap = async () => {
+      const storedSession = storage.getSession();
+      const storedAccess = storage.getAccessToken();
 
-    if (storedUser && storedAccess) {
-      setUser(storedUser);
-      setAccessToken(storedAccess);
-    } else if (typeof window !== 'undefined' && document.cookie.includes('isLoggedIn=1')) {
-      try {
-        const res = await axios.post(
-          `${API_URL}/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
-        const { accessToken: newAccessToken } = res.data.data;
-        setAccessToken(newAccessToken);
-        storage.setAccessToken(newAccessToken);
-      } catch {
-        storage.clear();
-        document.cookie = 'isLoggedIn=; path=/; max-age=0';
-        document.cookie = 'userRole=; path=/; max-age=0';
+      if (storedSession && storedAccess) {
+        setSession(storedSession);
+        setAccessToken(storedAccess);
+      } else if (
+        typeof window !== 'undefined' &&
+        document.cookie.includes('isLoggedIn=1')
+      ) {
+        try {
+          const res = await axios.post(
+            `${API_URL}/auth/refresh`,
+            {},
+            { withCredentials: true }
+          );
+          const { accessToken: newAccessToken } = res.data.data;
+          setAccessToken(newAccessToken);
+          storage.setAccessToken(newAccessToken);
+        } catch {
+          storage.clear();
+          document.cookie = 'isLoggedIn=; path=/; max-age=0';
+          document.cookie = 'accountType=; path=/; max-age=0';
+        }
       }
-    }
 
-    if (storedReset) setResetToken(storedReset);
-    setIsLoading(false);
-  };
+      setIsLoading(false);
+    };
 
-  bootstrap();
-}, []);
+    bootstrap();
+  }, []);
 
+  // ─── Listen for token refresh events ────────────────────────────
   useEffect(() => {
     const handleTokensRefreshed = (event: Event) => {
       const { accessToken } = (event as CustomEvent).detail;
@@ -77,130 +82,123 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const requestOTP = useCallback(
-    async (phone: string): Promise<MessageResponse> => {
-      return authService.requestOTP(phone);
-    },
-    []
-  );
+  // ─── Helper: store auth result ──────────────────────────────────
+  const persistAuth = useCallback(
+  (data: AuthResponse) => {
+    if (!data.success) return;
 
-  const verifyOTP = useCallback(
-    async (phone: string, otp: string): Promise<VerifyOTPResponse> => {
-      const data = await authService.verifyOTP(phone, otp);
-      setResetToken(data.resetToken);
-      storage.setResetToken(data.resetToken);
-      return data;
-    },
-    []
-  );
+    setSession(data.data.session);
+    setAccessToken(data.data.accessToken);
 
+    storage.setSession(data.data.session);
+    storage.setAccessToken(data.data.accessToken);
+
+    document.cookie = `isLoggedIn=1; path=/; max-age=604800`;
+    document.cookie = `accountType=${data.data.session.accountType}; path=/; max-age=604800`;
+  },
+  []
+);
+  // ─── Login ──────────────────────────────────────────────────────
   const loginWithPassword = useCallback(
-    async (phone: string, password: string): Promise<AuthResponse> => {
-      const data = await authService.loginWithPassword(phone, password);
+    async (
+      identifier: string,
+      password: string,
+      identifierType: IdentifierType = 'phone',
+      accountType: AccountType = 'personal'
+    ): Promise<AuthResponse> => {
+      const data = await authService.loginWithPassword(
+        identifier,
+        password,
+        identifierType,
+        accountType
+      );
 
-      const safeUser = data.user ?? null;
-      const safeAccess = data.accessToken ?? null;
-
-      setUser(safeUser);
-      setAccessToken(safeAccess);
-
-      if (safeUser) storage.setUser(safeUser);
-      if (safeAccess) storage.setAccessToken(safeAccess);
-
-      // Cookies for Next.js middleware (existence-only, not for authentication)
-document.cookie = `isLoggedIn=1; path=/; max-age=604800`;
-document.cookie = `userRole=${safeUser?.role || ''}; path=/; max-age=604800`;
+      persistAuth(data);
 
       return data;
     },
-    []
+    [persistAuth]
   );
 
+  // ─── Register ───────────────────────────────────────────────────
+  const register = useCallback(
+    async (
+      verificationToken: string,
+      firstName: string,
+      lastName: string,
+      password: string
+    ): Promise<AuthResponse> => {
+      const data = await authService.register(
+        verificationToken,
+        firstName,
+        lastName,
+        password
+      );
+
+      persistAuth(data);
+
+      return data;
+    },
+    [persistAuth]
+  );
+
+  // ─── Logout ─────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     try {
-       await authService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
+      await authService.logout();
+    } catch {
+      // ignore — clean up locally regardless
     } finally {
-      setUser(null);
+      setSession(null);
       setAccessToken(null);
-      setResetToken(null);
       storage.clear();
 
       document.cookie =
-  'isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-document.cookie =
-  'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-
+        'isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      document.cookie =
+        'accountType=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
   }, []);
 
-  const setPassword = useCallback(
-    async (password: string): Promise<void> => {
-      if (!resetToken) throw new Error('Reset token not found');
-      const data = await authService.setPassword(password, resetToken);
-
-      const safeUser = data.user ?? null;
-      const safeAccess = data.accessToken ?? null;
-
-      setUser(safeUser);
-      setAccessToken(safeAccess);
-
-      if (safeUser) storage.setUser(safeUser);
-      if (safeAccess) storage.setAccessToken(safeAccess);
-
-      setResetToken(null);
-      storage.removeResetToken();
-    },
-    [resetToken]
-  );
-
+  // ─── Sessions ───────────────────────────────────────────────────
   const getSessions = useCallback(async (): Promise<SessionsResponse> => {
-    return authService.getSessions();
+    return sessionService.getSessions();
   }, []);
 
-  const revokeSession = useCallback(
-    async (id: string): Promise<MessageResponse> => {
-      return authService.revokeSession(id);
+  const revokeSession = useCallback(async (): Promise<MessageResponse> => {
+    return sessionService.revokeSession();
+  }, []);
+
+  const revokeAllSessions = useCallback(
+    async (): Promise<MessageResponse> => {
+      return sessionService.revokeAllSessions();
     },
     []
   );
 
-  const resendOTP = useCallback(
-    async (phone: string): Promise<MessageResponse> => {
-      return authService.resendOTP(phone);
-    },
-    []
-  );
-
+  // ─── Context value ──────────────────────────────────────────────
   const value = useMemo(
     () => ({
-      user,
+      session,
       accessToken,
-      resetToken,
       isLoading,
-      requestOTP,
-      verifyOTP,
-      resendOTP, 
       loginWithPassword,
+      register,
       logout,
-      setPassword,
       getSessions,
       revokeSession,
+      revokeAllSessions,
     }),
     [
-      user,
+      session,
       accessToken,
-      resetToken,
       isLoading,
-      requestOTP,
-      verifyOTP,
-      resendOTP, 
       loginWithPassword,
+      register,
       logout,
-      setPassword,
       getSessions,
       revokeSession,
+      revokeAllSessions,
     ]
   );
 

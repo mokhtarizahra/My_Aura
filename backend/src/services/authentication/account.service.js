@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import PersonalAccount from "../../models/account/PersonalAccount.js";
 import OrganizationAccount from "../../models/account/OrganizationAccount.js";
 import StaffAccount from "../../models/account/StaffAccount.js";
+import { authErrors } from "../../errors/authErrors.js";
 
 const ACCOUNT_TYPES = ["personal", "organization", "staff"];
 
@@ -23,7 +24,7 @@ const getAccountModel = (accountType) => {
       return StaffAccount;
 
     default:
-      throw new Error("Invalid account type");
+      throw authErrors.accountTypeInvalid();
   }
 };
 
@@ -32,7 +33,7 @@ const getAccountModel = (accountType) => {
  */
 const validateAccountType = (accountType) => {
   if (!ACCOUNT_TYPES.includes(accountType)) {
-    throw new Error("Invalid account type");
+    throw authErrors.accountTypeInvalid();
   }
 };
 
@@ -41,7 +42,7 @@ const validateAccountType = (accountType) => {
  */
 const validateAccountStatus = (status) => {
   if (!ACCOUNT_STATUSES.includes(status)) {
-    throw new Error("Invalid account status");
+    throw authErrors.accountStatusInvalid();
   }
 };
 
@@ -50,7 +51,7 @@ const validateAccountStatus = (status) => {
  */
 const validateAccountId = (accountId) => {
   if (!accountId) {
-    throw new Error("Account ID is required");
+    throw authErrors.accountIdRequired();
   }
 };
 
@@ -94,7 +95,7 @@ const normalizeCorporateEmail = (email) => {
  */
 export const findPersonalAccount = async ({ phone, email }) => {
   if (!phone && !email) {
-    throw new Error("Phone or email is required");
+    throw authErrors.phoneOrEmailRequired();
   }
 
   const conditions = [];
@@ -133,7 +134,7 @@ export const findAccountById = async ({ accountId, accountType }) => {
  */
 export const findOrganizationAccount = async ({ email, phone }) => {
   if (!email && !phone) {
-    throw new Error("Email or phone is required");
+    throw authErrors.phoneOrEmailRequired();
   }
 
   const conditions = [];
@@ -160,7 +161,7 @@ export const findOrganizationAccount = async ({ email, phone }) => {
  */
 export const findStaffAccount = async ({ corporateEmail }) => {
   if (!corporateEmail) {
-    throw new Error("Corporate email is required");
+    throw authErrors.corporateEmailRequired();
   }
 
   return StaffAccount.findOne({
@@ -186,7 +187,7 @@ export const findAccountForLogin = async ({
   accountType,
 }) => {
   if (!identifier) {
-    throw new Error("Identifier is required");
+    throw authErrors.identifierRequired();
   }
 
   validateAccountType(accountType);
@@ -206,7 +207,7 @@ export const findAccountForLogin = async ({
       }).select("+passwordHash");
     }
 
-    throw new Error("Invalid identifier type");
+    throw authErrors.identifierTypeInvalid();
   }
 
   if (accountType === "organization") {
@@ -222,12 +223,12 @@ export const findAccountForLogin = async ({
       }).select("+passwordHash");
     }
 
-    throw new Error("Invalid identifier type");
+    throw authErrors.identifierTypeInvalid();
   }
 
   if (accountType === "staff") {
     if (identifierType !== "corporateEmail") {
-      throw new Error("Invalid identifier type");
+      throw authErrors.identifierTypeInvalid();
     }
 
     return StaffAccount.findOne({
@@ -251,7 +252,7 @@ export const createPersonalAccount = async ({
   validateAccountStatus(status);
 
   if (!phone && !email) {
-    throw new Error("Phone or email is required");
+    throw authErrors.phoneOrEmailRequired();
   }
 
   return PersonalAccount.create({
@@ -278,11 +279,11 @@ export const createOrganizationAccount = async ({
   validateAccountStatus(status);
 
   if (!email) {
-    throw new Error("Email is required");
+    throw authErrors.emailRequired();
   }
 
   if (!passwordHash) {
-    throw new Error("Password hash is required");
+    throw authErrors.passwordHashRequired();
   }
 
   return OrganizationAccount.create({
@@ -307,11 +308,11 @@ export const createStaffAccount = async ({
   validateAccountStatus(status);
 
   if (!corporateEmail) {
-    throw new Error("Corporate email is required");
+    throw authErrors.corporateEmailRequired();
   }
 
   if (!passwordHash) {
-    throw new Error("Password hash is required");
+    throw authErrors.passwordHashRequired();
   }
 
   return StaffAccount.create({
@@ -330,7 +331,7 @@ export const createStaffAccount = async ({
  */
 export const hashPassword = async (password) => {
   if (typeof password !== "string" || !password) {
-    throw new Error("Password is required");
+    throw authErrors.passwordRequired();
   }
 
   return bcrypt.hash(password, 12);
@@ -341,7 +342,7 @@ export const hashPassword = async (password) => {
  */
 export const comparePassword = async (password, passwordHash) => {
   if (typeof password !== "string" || !password) {
-    throw new Error("Password is required");
+    throw authErrors.passwordRequired();
   }
 
   if (!passwordHash) {
@@ -366,20 +367,30 @@ export const setAccountPassword = async ({
   validateAccountType(accountType);
 
   if (typeof password !== "string" || password.length < 6) {
-    throw new Error("Password must be at least 6 characters");
+    throw authErrors.passwordTooShort();
   }
 
   const AccountModel = getAccountModel(accountType);
 
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  const account =
-    await AccountModel.findById(accountId).select("+passwordHash");
+  // Fetch account first (we need the current hash to compare)
+  const account = await AccountModel.findById(accountId).select(
+    "+passwordHash",
+  );
 
   if (!account) {
-    throw new Error("Account not found");
+    throw authErrors.accountNotFound();
   }
 
+  // Reject if the new password is identical to the current one
+  if (account.passwordHash) {
+    const isSame = await bcrypt.compare(password, account.passwordHash);
+    if (isSame) {
+      throw authErrors.passwordSameAsOld();
+    }
+  }
+
+  // Only now hash and save
+  const passwordHash = await bcrypt.hash(password, 12);
   account.passwordHash = passwordHash;
 
   await account.save();
@@ -403,11 +414,11 @@ export const isAccountActive = (account) => {
  */
 export const requireActiveAccount = (account) => {
   if (!account) {
-    throw new Error("Account not found");
+    throw authErrors.accountNotFound();
   }
 
   if (account.status !== "active") {
-    throw new Error("Account is not active");
+    throw authErrors.accountNotActive();
   }
 
   return account;
@@ -425,7 +436,7 @@ export const updateLastLogin = async ({ accountId, accountType }) => {
   const account = await AccountModel.findById(accountId);
 
   if (!account) {
-    throw new Error("Account not found");
+    throw authErrors.accountNotFound();
   }
 
   account.lastLoginAt = new Date();

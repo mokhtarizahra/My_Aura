@@ -1,4 +1,3 @@
-
 export type SearchCategory = 'all' | 'complex' | 'coach' | 'sport';
 
 export interface SearchParams {

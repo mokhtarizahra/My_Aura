@@ -31,8 +31,11 @@ describe("Utility: verifyRefreshToken", () => {
   it("should reject an access token", () => {
     const token = generateAccessToken("123", "personal");
 
-    expect(() => verifyRefreshToken(token)).toThrow(
-      "Invalid refresh token type",
+        expect(() => verifyRefreshToken(token)).toThrow(
+      expect.objectContaining({
+        code: "REFRESH_TOKEN_INVALID_TYPE",
+        message: "Invalid token type",
+      })
     );
   });
 

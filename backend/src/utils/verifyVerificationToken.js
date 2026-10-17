@@ -1,60 +1,46 @@
 import jwt from "jsonwebtoken";
+import { authErrors } from "../errors/authErrors.js";
 
 const JWT_ALGORITHM = "HS256";
 
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    throw new Error("JWT_SECRET is not configured");
-  }
-
+  if (!secret) throw authErrors.jwtSecretNotConfigured();
   return secret;
 };
 
 export const verifyVerificationToken = (token, expectedPurpose) => {
-  if (!token) {
-    throw new Error("Verification token is required");
-  }
+  if (!token) throw authErrors.verificationTokenRequired();
 
-  const verifyOptions = {
-    algorithms: [JWT_ALGORITHM],
-  };
-
-  if (process.env.JWT_ISSUER) {
-    verifyOptions.issuer = process.env.JWT_ISSUER;
-  }
-
-  if (process.env.JWT_AUDIENCE) {
-    verifyOptions.audience = process.env.JWT_AUDIENCE;
-  }
+  const verifyOptions = { algorithms: [JWT_ALGORITHM] };
+  if (process.env.JWT_ISSUER) verifyOptions.issuer = process.env.JWT_ISSUER;
+  if (process.env.JWT_AUDIENCE) verifyOptions.audience = process.env.JWT_AUDIENCE;
 
   let payload;
-
   try {
     payload = jwt.verify(token, getJwtSecret(), verifyOptions);
   } catch {
-    throw new Error("Invalid or expired verification token");
+    throw authErrors.verificationTokenInvalidOrExpired();
   }
 
   if (payload.tokenType !== "verification") {
-    throw new Error("Invalid verification token type");
+    throw authErrors.verificationTokenInvalidType();
   }
 
   if (!["registration", "password_reset"].includes(payload.purpose)) {
-    throw new Error("Invalid verification purpose");
+    throw authErrors.verificationPurposeInvalid();
   }
 
   if (expectedPurpose && payload.purpose !== expectedPurpose) {
-    throw new Error("Verification token purpose mismatch");
+    throw authErrors.verificationTokenPurposeMismatch();
   }
 
   if (!payload.identifier) {
-    throw new Error("Verification token identifier is missing");
+    throw authErrors.verificationTokenIdentifierMissing();
   }
 
   if (!["phone", "email"].includes(payload.identifierType)) {
-    throw new Error("Invalid verification identifier type");
+    throw authErrors.verificationIdentifierTypeInvalid();
   }
 
   return payload;

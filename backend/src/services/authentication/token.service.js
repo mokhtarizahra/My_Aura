@@ -2,6 +2,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 
 import { generateToken } from "../../utils/generateToken.js";
+import { authErrors } from "../../errors/authErrors.js";
 
 const ACCESS_TOKEN_EXPIRES_IN = "15m";
 const REFRESH_TOKEN_EXPIRES_IN = "7d";
@@ -18,7 +19,7 @@ const IDENTIFIER_TYPES = ["phone", "email"];
  */
 const validateAccountType = (accountType) => {
   if (!ACCOUNT_TYPES.includes(accountType)) {
-    throw new Error("Invalid account type");
+    throw authErrors.accountTypeInvalid();
   }
 };
 
@@ -27,7 +28,7 @@ const validateAccountType = (accountType) => {
  */
 const validateAccountId = (accountId) => {
   if (!accountId) {
-    throw new Error("Account ID is required");
+    throw authErrors.accountIdRequired();
   }
 };
 
@@ -36,7 +37,7 @@ const validateAccountId = (accountId) => {
  */
 const validateIdentifierType = (identifierType) => {
   if (!IDENTIFIER_TYPES.includes(identifierType)) {
-    throw new Error("Invalid identifier type");
+    throw authErrors.identifierTypeInvalid();
   }
 };
 
@@ -45,7 +46,7 @@ const validateIdentifierType = (identifierType) => {
  */
 const validateVerificationPurpose = (purpose) => {
   if (!VERIFICATION_PURPOSES.includes(purpose)) {
-    throw new Error("Invalid verification purpose");
+    throw authErrors.verificationPurposeInvalid();
   }
 };
 
@@ -101,12 +102,14 @@ export const generateVerificationToken = ({
   purpose,
 }) => {
   if (!identifier) {
-    throw new Error("Identifier is required");
+    throw authErrors.identifierRequired();
   }
 
   validateIdentifierType(identifierType);
-
   validateVerificationPurpose(purpose);
+
+  console.log('[TOKEN DEBUG] Generating verification token at:', new Date().toISOString());
+  console.log('[TOKEN DEBUG] Now timestamp:', Math.floor(Date.now() / 1000));
 
   return generateToken(
     {
@@ -131,7 +134,7 @@ export const generateVerificationToken = ({
  */
 export const verifyVerificationToken = (token, expectedPurpose = null) => {
   if (!token) {
-    throw new Error("Verification token is required");
+    throw authErrors.verificationTokenRequired();
   }
 
   let payload;
@@ -143,23 +146,23 @@ export const verifyVerificationToken = (token, expectedPurpose = null) => {
       audience: process.env.JWT_AUDIENCE,
     });
   } catch {
-    throw new Error("Invalid or expired verification token");
+    throw authErrors.verificationTokenInvalidOrExpired();
   }
 
   if (payload.tokenType !== "verification") {
-    throw new Error("Invalid verification token type");
+    throw authErrors.verificationTokenInvalidType();
   }
 
   if (!payload.identifier) {
-    throw new Error("Invalid verification token identifier");
+    throw authErrors.verificationTokenInvalidIdentifier();
   }
 
   if (!payload.identifierType) {
-    throw new Error("Invalid verification token identifier type");
+    throw authErrors.verificationTokenInvalidIdentifierType();
   }
 
   if (!payload.purpose) {
-    throw new Error("Invalid verification token purpose");
+    throw authErrors.verificationTokenInvalidPurpose();
   }
 
   validateIdentifierType(payload.identifierType);
@@ -170,7 +173,7 @@ export const verifyVerificationToken = (token, expectedPurpose = null) => {
     validateVerificationPurpose(expectedPurpose);
 
     if (payload.purpose !== expectedPurpose) {
-      throw new Error("Verification token purpose mismatch");
+      throw authErrors.verificationTokenPurposeMismatch();
     }
   }
 

@@ -1,78 +1,90 @@
-// frontend/hooks/useOTP.ts
 'use client';
 
-import { ROUTES } from '@/constants/routes';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+
+import * as otpService from '@/services/authentication/otp.service';
+import { IdentifierType, OTPPurpose } from '@/types/auth';
+
 import { useToast } from '../use-toast';
-import { useAuth } from './useAuth';
 
 interface UseOTPOptions {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-  redirectPath?: string; 
+  onError?: (errorCode: string) => void;
 }
 
+/**
+ * OTP hook.
+ *
+ * Responsibilities:
+ *   - Call the OTP service.
+ *   - Show toast notifications (translated).
+ *   - Return structured results to the caller.
+ *
+ * It does NOT redirect. Redirection is the page's responsibility.
+ */
 export function useOTP(options?: UseOTPOptions) {
-  const router = useRouter();
   const { toast } = useToast();
-  const { verifyOTP, resendOTP } = useAuth();
+  const t = useTranslations('Auth.otp');
 
-  const handleVerifyOTP = async (phone: string, code: string) => {
+  /**
+   * Request a new OTP.
+   */
+  const requestOTP = async (
+    identifier: string,
+    identifierType: IdentifierType,
+    purpose: OTPPurpose = 'registration'
+  ) => {
     try {
-      await verifyOTP(phone, code);
-
-      toast({
-        title: 'تأیید موفق',
-        description: 'کد یکبارمصرف با موفقیت تأیید شد.',
-      });
-
-      // Redirect to the specified or default path
-      const redirectTo = options?.redirectPath || ROUTES.REGISTER;
-      router.push(redirectTo);
-
-      options?.onSuccess?.();
-      
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'خطا در تأیید کد';
-      
-      toast({
-        title: 'خطا در تأیید',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-
-      options?.onError?.(error instanceof Error ? error : new Error(errorMessage));
-      
-      return { success: false, error: errorMessage };
+      await otpService.requestOTP(identifier, identifierType, purpose);
+      return { success: true as const };
+    } catch (err) {
+      const errorCode = err instanceof Error ? err.message : 'NETWORK_ERROR';
+      options?.onError?.(errorCode);
+      return { success: false as const, error: errorCode };
     }
   };
 
-  const handleResendOTP = async (phone: string) => {
+  /**
+   * Verify an OTP and return the verification token.
+   */
+  const verifyOTP = async (
+    identifier: string,
+    identifierType: IdentifierType,
+    otp: string,
+    purpose: OTPPurpose = 'registration'
+  ) => {
     try {
-      await resendOTP(phone);
-      
+      const result = await otpService.verifyOTP(
+        identifier,
+        identifierType,
+        otp,
+        purpose
+      );
+
       toast({
-        title: 'ارسال مجدد',
-        description: 'کد جدید با موفقیت به شماره شما ارسال شد.',
+        title: t('toast.successTitle'),
+        description: t('toast.successDescription'),
       });
-      
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'خطا در ارسال مجدد کد';
-      
+
+      return {
+        success: true as const,
+        verificationToken: result.verificationToken,
+      };
+    } catch (err) {
+      const errorCode = err instanceof Error ? err.message : 'NETWORK_ERROR';
+
       toast({
-        title: 'خطا',
-        description: errorMessage,
+        title: t('toast.errorTitle'),
+        description: errorCode, // ← کد خطا، نه متن
         variant: 'destructive',
       });
-      
-      return { success: false, error: errorMessage };
+
+      options?.onError?.(errorCode);
+      return { success: false as const, error: errorCode };
     }
   };
 
   return {
-    verifyOTP: handleVerifyOTP,
-    resendOTP: handleResendOTP,
+    requestOTP,
+    verifyOTP,
   };
 }

@@ -1,6 +1,8 @@
+import { authErrors } from "../errors/authErrors.js";
+
 export const generateOTP = (length = 4) => {
   if (!Number.isInteger(length) || length < 4) {
-    throw new Error("OTP length must be an integer greater than or equal to 4");
+    throw authErrors.otpLengthInvalid();
   }
 
   const min = 10 ** (length - 1);

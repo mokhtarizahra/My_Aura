@@ -118,6 +118,7 @@ describe("Authentication: authRoutes", () => {
     it("should route POST /login to loginWithPassword", async () => {
       const response = await request(app).post("/api/auth/login").send({
         identifier: "+989121234567",
+        identifierType: "phone",
         password: "StrongPassword123!",
       });
 

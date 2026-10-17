@@ -5,36 +5,45 @@ import {
   findPersonalAccount,
   hashPassword,
 } from "./account.service.js";
+import { authErrors } from "../../errors/authErrors.js";
 
 const VALID_IDENTIFIER_TYPES = ["phone", "email"];
 
 const validateIdentifierType = (identifierType) => {
   if (!VALID_IDENTIFIER_TYPES.includes(identifierType)) {
-    throw new Error("Invalid identifier type");
+    throw authErrors.identifierTypeInvalid();
   }
 };
 
 const validateIdentifier = (identifier) => {
   if (typeof identifier !== "string" || !identifier.trim()) {
-    throw new Error("Identifier is required");
+    throw authErrors.identifierRequired();
   }
 
   return identifier.trim();
 };
 
 const validateName = (name, fieldName) => {
+  const isFirst = fieldName.toLowerCase().includes("first");
+
   if (typeof name !== "string" || !name.trim()) {
-    throw new Error(`${fieldName} is required`);
+    throw isFirst
+      ? authErrors.firstNameRequired()
+      : authErrors.lastNameRequired();
   }
 
   const normalizedName = name.trim();
 
   if (normalizedName.length < 2) {
-    throw new Error(`${fieldName} must be at least 2 characters`);
+    throw isFirst
+      ? authErrors.firstNameTooShort()
+      : authErrors.lastNameTooShort();
   }
 
   if (normalizedName.length > 50) {
-    throw new Error(`${fieldName} must not exceed 50 characters`);
+    throw isFirst
+      ? authErrors.firstNameTooLong()
+      : authErrors.lastNameTooLong();
   }
 
   return normalizedName;
@@ -71,7 +80,7 @@ const ensurePersonalAccountDoesNotExist = async ({
         });
 
   if (account) {
-    throw new Error("Account already exists");
+    throw authErrors.accountAlreadyExists();
   }
 };
 

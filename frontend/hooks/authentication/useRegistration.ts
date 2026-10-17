@@ -1,17 +1,74 @@
 'use client';
 
-import { useContext } from 'react';
+import { useTranslations } from 'next-intl';
 
-import { AuthContext } from '@/context/authentication/AuthenticationProvider';
+import { useToast } from '../use-toast';
+import { useAuth } from './useAuth';
 
-import { AuthContextType } from '../../types/auth';
+interface UseRegistrationOptions {
+  onError?: (errorCode: string) => void;
+}
 
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
+/**
+ * Registration hook.
+ *
+ * Responsibilities:
+ *   - Call the register action from AuthContext.
+ *   - Show toast notifications (translated).
+ *   - Return structured results to the caller.
+ *
+ * It does NOT redirect. Redirection is the page's responsibility.
+ */
+export function useRegistration(options?: UseRegistrationOptions) {
+  const { toast } = useToast();
+  const t = useTranslations('Auth.completeRegistration');
+  const { register: registerAction } = useAuth();
 
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  const register = async (
+    verificationToken: string,
+    firstName: string,
+    lastName: string,
+    password: string
+  ) => {
+    try {
+      const result = await registerAction(
+        verificationToken,
+        firstName,
+        lastName,
+        password
+      );
 
-  return context;
+      if (!result.success) {
+        const errorCode = result.code || 'REGISTRATION_FAILED';
+
+        toast({
+          title: t('errors.registrationFailed'),
+          description: errorCode,
+          variant: 'destructive',
+        });
+
+        options?.onError?.(errorCode);
+        return { success: false as const, error: errorCode };
+      }
+
+      return {
+        success: true as const,
+  session: result.data.session,
+  accessToken: result.data.accessToken,
+      };
+    } catch (err) {
+      const errorCode = err instanceof Error ? err.message : 'NETWORK_ERROR';
+
+      toast({
+        title: t('errors.registrationFailed'),
+        description: errorCode,
+        variant: 'destructive',
+      });
+
+      options?.onError?.(errorCode);
+      return { success: false as const, error: errorCode };
+    }
+  };
+
+  return { register };
 }

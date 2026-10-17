@@ -1,7 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { NextIntlClientProvider } from 'next-intl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { useAuth } from '@/hooks/authentication/useAuth';
+import faMessages from '@/messages/fa.json';
+
 import { LoginForm } from './LoginForm';
 
 vi.mock('@/hooks/authentication/useAuth', () => ({
@@ -23,7 +27,11 @@ const mockLoginWithPassword = vi.fn();
 const renderLoginForm = (
   props?: Partial<React.ComponentProps<typeof LoginForm>>
 ) => {
-  return render(<LoginForm {...props} />);
+  return render(
+    <NextIntlClientProvider locale="fa" messages={faMessages}>
+      <LoginForm {...props} />
+    </NextIntlClientProvider>
+  );
 };
 
 describe('LoginForm Component', () => {
@@ -40,11 +48,11 @@ describe('LoginForm Component', () => {
 
     expect(screen.getByLabelText('شماره موبایل')).toBeInTheDocument();
 
-    expect(screen.getByLabelText('رمز عبور', {selector: 'input'})
+    expect(
+      screen.getByLabelText('رمز عبور', { selector: 'input' })
     ).toBeInTheDocument();
 
-    expect(screen.getByRole('button', {name: 'ورود'})
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ورود' })).toBeInTheDocument();
 
     expect(screen.getByText('حساب کاربری ندارید؟')).toBeInTheDocument();
   });
@@ -54,13 +62,13 @@ describe('LoginForm Component', () => {
 
     renderLoginForm();
 
-    await user.click(screen.getByRole('button', {name: 'ورود'}));
+    await user.click(screen.getByRole('button', { name: 'ورود' }));
 
-    expect(await screen.findByText('شماره موبایل الزامی است')
+    expect(
+      await screen.findByText('شماره موبایل الزامی است')
     ).toBeInTheDocument();
 
-    expect(await screen.findByText('رمز عبور باید حداقل ۶ کاراکتر باشد')
-    ).toBeInTheDocument();
+    expect(await screen.findByText('رمز عبور الزامی است')).toBeInTheDocument();
   });
 
   it('should validate Iranian phone number format', async () => {
@@ -70,13 +78,15 @@ describe('LoginForm Component', () => {
 
     await user.type(screen.getByLabelText('شماره موبایل'), '0912345');
 
-    await user.type(screen.getByLabelText('رمز عبور',
-      {selector: 'input'}),'123456'
+    await user.type(
+      screen.getByLabelText('رمز عبور', { selector: 'input' }),
+      '123456'
     );
 
-    await user.click(screen.getByRole('button', {name: 'ورود'}));
+    await user.click(screen.getByRole('button', { name: 'ورود' }));
 
-    expect(await screen.findByText('شماره موبایل معتبر ایرانی وارد کنید')
+    expect(
+      await screen.findByText('شماره موبایل معتبر ایرانی وارد کنید')
     ).toBeInTheDocument();
   });
 
@@ -86,21 +96,26 @@ describe('LoginForm Component', () => {
     const onSuccess = vi.fn();
 
     mockLoginWithPassword.mockResolvedValue({
-      success: true,user: {role: 'USER',},
+      success: true,
+      user: { role: 'USER' },
     });
 
-    renderLoginForm({onSuccess});
+    renderLoginForm({ onSuccess });
 
     await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
 
     await user.type(
-      screen.getByLabelText('رمز عبور', {selector: 'input'}),'securepass'
+      screen.getByLabelText('رمز عبور', { selector: 'input' }),
+      'securepass'
     );
 
-    await user.click(screen.getByRole('button', {name: 'ورود'}));
+    await user.click(screen.getByRole('button', { name: 'ورود' }));
 
     await waitFor(() => {
-      expect(mockLoginWithPassword).toHaveBeenCalledWith('09123456789','securepass');
+      expect(mockLoginWithPassword).toHaveBeenCalledWith(
+        '09123456789',
+        'securepass'
+      );
       expect(onSuccess).toHaveBeenCalledWith('USER');
     });
   });
@@ -112,17 +127,19 @@ describe('LoginForm Component', () => {
 
     mockLoginWithPassword.mockRejectedValue(new Error('Invalid credentials'));
 
-    renderLoginForm({onError});
+    renderLoginForm({ onError });
 
     await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
 
-    await user.type(screen.getByLabelText('رمز عبور',
-      {selector: 'input'}),'wrongpass'
+    await user.type(
+      screen.getByLabelText('رمز عبور', { selector: 'input' }),
+      'wrongpass'
     );
 
-    await user.click(screen.getByRole('button', {name: 'ورود'}));
+    await user.click(screen.getByRole('button', { name: 'ورود' }));
 
-    expect(await screen.findByText('نام کاربری یا رمز عبور نادرست است.')
+    expect(
+      await screen.findByText('نام کاربری یا رمز عبور نادرست است.')
     ).toBeInTheDocument();
 
     expect(onError).toHaveBeenCalled();
@@ -144,5 +161,23 @@ describe('LoginForm Component', () => {
     await user.click(toggleButton);
 
     expect(passwordInput).toHaveAttribute('type', 'text');
+  });
+
+  it('should show min length error for short password', async () => {
+    const user = userEvent.setup();
+
+    renderLoginForm();
+
+    await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
+    await user.type(
+      screen.getByLabelText('رمز عبور', { selector: 'input' }),
+      '123'
+    );
+
+    await user.click(screen.getByRole('button', { name: 'ورود' }));
+
+    expect(
+      await screen.findByText('رمز عبور باید حداقل ۶ کاراکتر باشد')
+    ).toBeInTheDocument();
   });
 });

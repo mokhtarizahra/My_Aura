@@ -318,7 +318,10 @@ describe("Authentication: account.service", () => {
 
     it("should reject when no identifier is supplied", async () => {
       await expect(findOrganizationAccount({})).rejects.toThrow(
-        "Email or phone is required",
+        expect.objectContaining({
+          code: "PHONE_OR_EMAIL_REQUIRED",
+          message: "Phone or email is required",
+        }),
       );
     });
   });

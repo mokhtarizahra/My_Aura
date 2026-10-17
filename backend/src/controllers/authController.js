@@ -34,6 +34,9 @@ import {
   setRefreshTokenCookie,
 } from "../utils/cookie.js";
 
+import { AppError } from "../errors/AppError.js";
+import { authErrors } from "../errors/authErrors.js";
+
 /*
  * --------------------------------------------------------------------------
  * HTTP helpers
@@ -89,82 +92,22 @@ const failure = (res, status, message) => {
   });
 };
 
-/*
- * --------------------------------------------------------------------------
- * Error mapping
- * --------------------------------------------------------------------------
- *
- * Services throw domain errors.
- * Controllers translate those errors into HTTP responses.
- *
- * The controller does NOT reproduce the validation logic
- * implemented by the services.
- */
-
-const getErrorStatus = (error) => {
-  const message = error?.message;
-
-  switch (message) {
-    case "Account already exists":
-      return 409;
-
-    case "Account not found":
-      return 404;
-
-    case "Invalid credentials":
-      return 401;
-
-    case "Account is not active":
-      return 403;
-
-    case "Invalid or expired OTP request":
-    case "OTP expired":
-    case "Maximum OTP attempts exceeded":
-    case "Invalid OTP":
-    case "Invalid or expired verification token":
-    case "Invalid verification token type":
-    case "Invalid verification token identifier":
-    case "Invalid verification token identifier type":
-    case "Invalid verification token purpose":
-    case "Verification token purpose mismatch":
-    case "Invalid refresh token":
-    case "Invalid token type":
-    case "Invalid refresh token subject":
-    case "Invalid refresh token account type":
-    case "Refresh token revoked or expired":
-      return 401;
-
-    case "OTP resend cooldown active":
-      return 429;
-
-    case "Identifier is required":
-    case "Invalid identifier type":
-    case "Invalid OTP":
-    case "Invalid OTP purpose":
-    case "Password is required":
-    case "Password must be at least 6 characters":
-    case "Verification token is required":
-    case "Refresh token is required":
-    case "Account ID is required":
-    case "Invalid account type":
-    case "First name is required":
-    case "Last name is required":
-      return 400;
-
-    default:
-      return 500;
-  }
-};
-
 const handleError = (res, error) => {
-  const status = getErrorStatus(error);
+  // Handle AppError instances (services throw these)
+  if (error instanceof AppError) {
+    return res.status(error.status).json({
+      success: false,
+      code: error.code,
+      message: error.message,
+    });
+  }
 
-  /*
-   * Never expose unexpected internal errors.
-   */
-  const message = status === 500 ? "Internal server error" : error.message;
-
-  return failure(res, status, message);
+  // Unknown errors → generic 500
+  return res.status(500).json({
+    success: false,
+    code: "INTERNAL_SERVER_ERROR",
+    message: "Internal server error",
+  });
 };
 
 /*
@@ -183,17 +126,17 @@ export const requestOTP = async (req, res) => {
     const { identifier, identifierType } = req.body ?? {};
 
     if (typeof identifier !== "string" || !identifier.trim()) {
-      return failure(res, 400, "Identifier is required");
+      throw authErrors.identifierRequired();
     }
 
     if (!identifierType) {
-      return failure(res, 400, "Identifier type is required");
+      throw authErrors.identifierTypeInvalid();
     }
 
     const result = await sendOTP({
       identifier,
       identifierType,
-      purpose: "registration",
+      purpose: req.body.purpose || "registration",
     });
 
     return success(res, {
@@ -220,15 +163,15 @@ export const verifyOTPController = async (req, res) => {
     } = req.body ?? {};
 
     if (typeof identifier !== "string" || !identifier.trim()) {
-      return failure(res, 400, "Identifier is required");
+      throw authErrors.identifierRequired();
     }
 
     if (!identifierType) {
-      return failure(res, 400, "Identifier type is required");
+      throw authErrors.identifierTypeInvalid();
     }
 
     if (otp === undefined || otp === null || otp === "") {
-      return failure(res, 400, "OTP is required");
+      throw authErrors.otpRequired();
     }
 
     const result = await verifyOTP({
@@ -257,7 +200,7 @@ export const register = async (req, res) => {
     const { verificationToken, firstName, lastName, password } = req.body ?? {};
 
     if (!verificationToken) {
-      return failure(res, 400, "Verification token is required");
+      throw authErrors.verificationTokenRequired();
     }
 
     const verification = verifyVerificationToken(
@@ -307,15 +250,15 @@ export const loginWithPassword = async (req, res) => {
     } = req.body ?? {};
 
     if (typeof identifier !== "string" || !identifier.trim()) {
-      return failure(res, 400, "Identifier is required");
+      throw authErrors.identifierRequired();
     }
 
     if (!identifierType) {
-      return failure(res, 400, "Identifier type is required");
+      throw authErrors.identifierTypeInvalid();
     }
 
     if (typeof password !== "string" || !password) {
-      return failure(res, 400, "Password is required");
+      throw authErrors.passwordRequired();
     }
 
     const account = await findAccountForLogin({
@@ -328,7 +271,7 @@ export const loginWithPassword = async (req, res) => {
      * Do not reveal whether the account exists.
      */
     if (!account) {
-      return failure(res, 401, "Invalid credentials");
+      throw authErrors.invalidCredentials();
     }
 
     requireActiveAccount(account);
@@ -336,7 +279,7 @@ export const loginWithPassword = async (req, res) => {
     const passwordValid = await comparePassword(password, account.passwordHash);
 
     if (!passwordValid) {
-      return failure(res, 401, "Invalid credentials");
+      throw authErrors.invalidCredentials();
     }
 
     const accessToken = generateAccessToken(account._id, accountType);
@@ -382,11 +325,11 @@ export const setPassword = async (req, res) => {
     const { verificationToken, password } = req.body ?? {};
 
     if (!verificationToken) {
-      return failure(res, 400, "Verification token is required");
+      throw authErrors.verificationTokenRequired();
     }
 
     if (typeof password !== "string" || password.length < 6) {
-      return failure(res, 400, "Password must be at least 6 characters");
+      throw authErrors.passwordTooShort();
     }
 
     const verification = verifyVerificationToken(
@@ -405,7 +348,7 @@ export const setPassword = async (req, res) => {
     );
 
     if (!account) {
-      return failure(res, 404, "Account not found");
+      throw authErrors.accountNotFound();
     }
 
     await setAccountPassword({
@@ -451,7 +394,7 @@ export const refreshAccessToken = async (req, res) => {
     );
 
     if (!refreshToken) {
-      return failure(res, 400, "Refresh token is required");
+      throw authErrors.refreshTokenRequired();
     }
 
     const { payload } = await validateRefreshToken(refreshToken);
@@ -504,7 +447,7 @@ export const logout = async (req, res) => {
     );
 
     if (!refreshToken) {
-      return failure(res, 400, "Refresh token is required");
+      throw authErrors.refreshTokenRequired();
     }
 
     await revokeRefreshToken(refreshToken);
@@ -531,7 +474,7 @@ export const logout = async (req, res) => {
 export const getSessions = async (req, res) => {
   try {
     if (!req.auth?.accountId) {
-      return failure(res, 401, "Authentication required");
+      throw authErrors.authenticationRequired();
     }
 
     const sessions = await getActiveSessions({
@@ -555,7 +498,7 @@ export const getSessions = async (req, res) => {
 export const getSessionHistoryController = async (req, res) => {
   try {
     if (!req.auth?.accountId) {
-      return failure(res, 401, "Authentication required");
+      throw authErrors.authenticationRequired();
     }
 
     const sessions = await getSessionHistory({
@@ -583,13 +526,13 @@ export const revokeSession = async (req, res) => {
     const refreshToken = getString(req.body?.refreshToken);
 
     if (!refreshToken) {
-      return failure(res, 400, "Refresh token is required");
+      throw authErrors.refreshTokenRequired();
     }
 
     const revoked = await revokeRefreshToken(refreshToken);
 
     if (!revoked) {
-      return failure(res, 404, "Session not found");
+      throw authErrors.sessionNotFound();
     }
 
     return success(res);
@@ -604,7 +547,7 @@ export const revokeSession = async (req, res) => {
 export const revokeAllSessions = async (req, res) => {
   try {
     if (!req.auth?.accountId) {
-      return failure(res, 401, "Authentication required");
+      throw authErrors.authenticationRequired();
     }
 
     const revokedSessions = await revokeAllRefreshTokens({
