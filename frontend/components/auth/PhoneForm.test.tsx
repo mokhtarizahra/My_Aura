@@ -10,16 +10,20 @@ import faMessages from '@/messages/fa.json';
 
 import { PhoneForm } from './PhoneForm';
 
-// Mocks
-const mockRequestOTP = vi.fn();
-
 vi.mock('@/hooks/authentication/usePhone', () => ({
   usePhone: vi.fn(),
 }));
 
-// Helpers
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+const mockRequestOTP = vi.fn();
+
 const renderPhoneForm = (
-  props: React.ComponentProps<typeof PhoneForm> = {}
+  props: Partial<React.ComponentProps<typeof PhoneForm>> = {}
 ) => {
   return render(
     <NextIntlClientProvider locale="fa" messages={faMessages}>
@@ -28,60 +32,43 @@ const renderPhoneForm = (
   );
 };
 
-// Test Suite
 describe('PhoneForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockRequestOTP.mockResolvedValue({
-      success: true,
-      phone: '09123456789',
-    });
-
-    (usePhone as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (options: any) => ({
-        requestOTP: async (phone: string) => {
-          const result = await mockRequestOTP(phone);
-
-          if (result.success) {
-            options?.onSuccess?.(phone);
-          }
-
-          return result;
-        },
-      })
-    );
+    (usePhone as any).mockImplementation((options: any = {}) => ({
+      requestOTP: async (
+        identifier: string,
+        identifierType: string,
+        purpose: string
+      ) => {
+        const result = await mockRequestOTP(
+          identifier,
+          identifierType,
+          purpose
+        );
+        if (!result.success) {
+          options?.onError?.(result.error);
+        }
+        return result;
+      },
+    }));
   });
 
-  // Rendering
   it('renders phone form correctly', () => {
     renderPhoneForm();
-
     expect(screen.getByText('ورود به حساب کاربری')).toBeInTheDocument();
-
     expect(screen.getByLabelText('شماره موبایل')).toBeInTheDocument();
-
     expect(screen.getByPlaceholderText('09123456789')).toBeInTheDocument();
-
     expect(
-      screen.getByRole('button', {
-        name: /ارسال کد تأیید/i,
-      })
+      screen.getByRole('button', { name: /ارسال کد تأیید/i })
     ).toBeInTheDocument();
   });
 
-  // Validation
   it('shows error when phone is empty', async () => {
     const user = userEvent.setup();
-
     renderPhoneForm();
-
-    await user.click(
-      screen.getByRole('button', {
-        name: /ارسال کد تأیید/i,
-      })
-    );
-
+    await user.click(screen.getByRole('button', { name: /ارسال کد تأیید/i }));
     expect(
       await screen.findByText('شماره موبایل الزامی است')
     ).toBeInTheDocument();
@@ -89,77 +76,55 @@ describe('PhoneForm', () => {
 
   it('rejects invalid phone number', async () => {
     const user = userEvent.setup();
-
     renderPhoneForm();
-
-    const input = screen.getByLabelText('شماره موبایل');
-
-    await user.type(input, '0912345678');
-
-    await user.click(
-      screen.getByRole('button', {
-        name: /ارسال کد تأیید/i,
-      })
-    );
-
+    await user.type(screen.getByLabelText('شماره موبایل'), '0912345678');
+    await user.click(screen.getByRole('button', { name: /ارسال کد تأیید/i }));
     expect(
       await screen.findByText('شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد')
     ).toBeInTheDocument();
   });
 
-  // Submit Success
   it('calls requestOTP and onSuccess after successful request', async () => {
     const user = userEvent.setup();
-
     const onSuccess = vi.fn();
 
-    renderPhoneForm({
-      onSuccess,
-    });
+    mockRequestOTP.mockResolvedValue({ success: true });
 
-    const input = screen.getByLabelText('شماره موبایل');
+    renderPhoneForm({ onSuccess });
 
-    await user.type(input, '09123456789');
-
-    await user.click(
-      screen.getByRole('button', {
-        name: /ارسال کد تأیید/i,
-      })
-    );
+    await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
+    await user.click(screen.getByRole('button', { name: /ارسال کد تأیید/i }));
 
     await waitFor(() => {
-      expect(mockRequestOTP).toHaveBeenCalledWith('09123456789');
-
+      expect(mockRequestOTP).toHaveBeenCalledWith(
+        '09123456789',
+        'phone',
+        'registration'
+      );
       expect(onSuccess).toHaveBeenCalledWith('09123456789');
     });
   });
 
-  // Error
   it('shows server error message', async () => {
     const user = userEvent.setup();
+    const onError = vi.fn();
 
     mockRequestOTP.mockResolvedValue({
       success: false,
-      error: 'خطا در ارسال کد',
+      error: 'OTP_REQUEST_FAILED',
     });
 
-    renderPhoneForm();
+    renderPhoneForm({ onError });
 
     await user.type(screen.getByLabelText('شماره موبایل'), '09123456789');
+    await user.click(screen.getByRole('button', { name: /ارسال کد تأیید/i }));
 
-    await user.click(
-      screen.getByRole('button', {
-        name: /ارسال کد تأیید/i,
-      })
-    );
-
-    expect(await screen.findByText('خطا در ارسال کد')).toBeInTheDocument();
+    expect(await screen.findByText('OTP_REQUEST_FAILED')).toBeInTheDocument();
+    expect(onError).toHaveBeenCalledWith('OTP_REQUEST_FAILED');
   });
 
-  // Loading
   it('disables button and input while submitting', async () => {
     const user = userEvent.setup();
-
     let resolveRequest: any;
 
     mockRequestOTP.mockImplementation(
@@ -172,27 +137,18 @@ describe('PhoneForm', () => {
     renderPhoneForm();
 
     const input = screen.getByLabelText('شماره موبایل');
-
-    const button = screen.getByRole('button', {
-      name: /ارسال کد تأیید/i,
-    });
+    const button = screen.getByRole('button', { name: /ارسال کد تأیید/i });
 
     await user.type(input, '09123456789');
-
     await user.click(button);
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', {
-          name: /در حال ارسال/i,
-        })
+        screen.getByRole('button', { name: /در حال ارسال/i })
       ).toBeDisabled();
-
       expect(input).toBeDisabled();
     });
 
-    resolveRequest({
-      success: true,
-    });
+    resolveRequest({ success: true });
   });
 });
