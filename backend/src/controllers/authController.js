@@ -1,6 +1,7 @@
 import { registerPersonalAccount } from "../services/authentication/registration.service.js";
 
 import {
+  changeAccountPassword,
   comparePassword,
   findAccountById,
   findAccountForLogin,
@@ -324,6 +325,43 @@ export const setPassword = async (req, res) => {
   }
 };
 
+/**
+ * Change the password of the currently authenticated account.
+ *
+ * Requires:
+ *   - A valid access token (via authenticateAccessToken middleware).
+ *   - The current password (for verification).
+ *   - The new password (must differ from current).
+ *
+ * All refresh-token sessions for this account are revoked after the
+ * change, forcing the user to log in again on every device with the
+ * new password. This is the standard security practice.
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const { accountId, accountType } = req.auth;
+
+    await changeAccountPassword({
+      accountId,
+      accountType,
+      currentPassword,
+      newPassword,
+    });
+
+    // Revoke every session so any device currently logged in is kicked out
+    const revokedSessions = await revokeAllRefreshTokens({
+      accountId,
+      accountType,
+    });
+
+    return success(res, {
+      data: { success: true, revokedSessions },
+    });
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
 /*
  * --------------------------------------------------------------------------
  * Refresh

@@ -129,3 +129,21 @@ export const passwordResetSchema = z.object({
     .min(6, MESSAGES.PASSWORD_TOO_SHORT)
     .max(200, MESSAGES.PASSWORD_TOO_LONG),
 });
+
+/*
+|--------------------------------------------------------------------------
+| Change password (authenticated)
+|--------------------------------------------------------------------------
+*/
+
+export const changePasswordSchema = z.object({
+  currentPassword: z
+    .string({ error: MESSAGES.CURRENT_PASSWORD_REQUIRED })
+    .min(1, MESSAGES.CURRENT_PASSWORD_REQUIRED),
+
+  newPassword: z
+    .string({ error: MESSAGES.PASSWORD_REQUIRED })
+    .min(1, MESSAGES.PASSWORD_EMPTY)
+    .min(6, MESSAGES.PASSWORD_TOO_SHORT)
+    .max(200, MESSAGES.PASSWORD_TOO_LONG),
+});

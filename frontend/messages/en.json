@@ -162,6 +162,33 @@
     "passwordSameAsOld": "New password must be different from the current one"
   }
 },
+"changePassword": {
+  "title": "Change Password",
+  "description": "For your account security, enter your current and new password",
+  "currentPassword": "Current password",
+  "currentPasswordPlaceholder": "••••••••",
+  "currentPasswordRequired": "Current password is required",
+  "newPassword": "New password",
+  "newPasswordPlaceholder": "••••••••",
+  "newPasswordRequired": "New password is required",
+  "newPasswordMin": "New password must be at least 8 characters",
+  "newPasswordWeak": "Password must contain letters and numbers",
+  "confirmPassword": "Confirm new password",
+  "confirmPasswordPlaceholder": "••••••••",
+  "confirmPasswordRequired": "Confirm password is required",
+  "confirmPasswordMismatch": "Passwords do not match",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "submit": "Save new password",
+  "submitting": "Saving...",
+  "backToDashboard": "Back to dashboard",
+  "errors": {
+    "invalidCurrentPassword": "Current password is incorrect",
+    "passwordSameAsOld": "New password must be different from current",
+    "changeFailed": "Failed to change password",
+    "validationFailed": "Invalid input data"
+  }
+},
 "redirect": {
   "errorTitle": "Error",
   "invalidAccountType": "You don't have permission to access this page."

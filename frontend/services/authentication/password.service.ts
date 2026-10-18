@@ -25,3 +25,27 @@ export const setPassword = async (
     throw new Error(extractErrorCode(err));
   }
 };
+
+/**
+ * Change the password of the currently authenticated account.
+ *
+ * Backend endpoint: POST /auth/password/change
+ * Payload: { currentPassword, newPassword }
+ * Requires: Bearer access token (automatically attached by the axios client).
+ */
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean }> => {
+  try {
+    const { data } = await api.post('/auth/password/change', {
+      currentPassword,
+      newPassword,
+    });
+    if (data.success === false)
+      throw new Error(data.code || 'PASSWORD_CHANGE_FAILED');
+    return data.data ?? data;
+  } catch (err) {
+    throw new Error(extractErrorCode(err));
+  }
+};

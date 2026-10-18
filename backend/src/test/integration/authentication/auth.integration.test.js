@@ -840,6 +840,146 @@ describe("Authentication Integration", () => {
 
     /*
   |--------------------------------------------------------------------------
+  | Change Password (authenticated)
+  |--------------------------------------------------------------------------
+  */
+
+  describe("Change Password", () => {
+    const NEW_PASSWORD = "NewPassword123!";
+
+    it("should reject without an access token", async () => {
+      const response = await request(app)
+        .post("/api/auth/password/change")
+        .send({
+          currentPassword: TEST_PASSWORD,
+          newPassword: NEW_PASSWORD,
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toMatchObject({
+        success: false,
+        code: "ACCESS_TOKEN_REQUIRED",
+      });
+    });
+
+    it("should reject with a wrong current password", async () => {
+      await createPersonalAccount();
+      const loginResponse = await login();
+      const accessToken = loginResponse.body.data.accessToken;
+
+      const response = await request(app)
+        .post("/api/auth/password/change")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .send({
+          currentPassword: "WrongPassword!",
+          newPassword: NEW_PASSWORD,
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toMatchObject({
+        success: false,
+        code: "INVALID_CURRENT_PASSWORD",
+      });
+    });
+
+    it("should reject when new password equals current password", async () => {
+      await createPersonalAccount();
+      const loginResponse = await login();
+      const accessToken = loginResponse.body.data.accessToken;
+
+      const response = await request(app)
+        .post("/api/auth/password/change")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .send({
+          currentPassword: TEST_PASSWORD,
+          newPassword: TEST_PASSWORD,
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        code: "PASSWORD_SAME_AS_OLD",
+      });
+    });
+
+    it("should reject a short new password via Zod validation", async () => {
+      await createPersonalAccount();
+      const loginResponse = await login();
+      const accessToken = loginResponse.body.data.accessToken;
+
+      const response = await request(app)
+        .post("/api/auth/password/change")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .send({
+          currentPassword: TEST_PASSWORD,
+          newPassword: "123",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "newPassword",
+            code: "PASSWORD_TOO_SHORT",
+          }),
+        ])
+      );
+    });
+
+    it("should change password, revoke all sessions, and require re-login with the new password", async () => {
+      await createPersonalAccount();
+      const loginResponse = await login();
+      const accessToken = loginResponse.body.data.accessToken;
+      const oldRefreshCookie = loginResponse.headers["set-cookie"];
+
+      const response = await request(app)
+        .post("/api/auth/password/change")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .send({
+          currentPassword: TEST_PASSWORD,
+          newPassword: NEW_PASSWORD,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+
+      // 1. Old refresh token must be revoked (all sessions revoked)
+      const refreshResponse = await request(app)
+        .post("/api/auth/refresh")
+        .set("Cookie", oldRefreshCookie);
+
+      expect(refreshResponse.status).toBe(401);
+
+      // 2. Old password must no longer work
+      const oldLogin = await request(app).post("/api/auth/login").send({
+        identifier: TEST_PHONE,
+        identifierType: "phone",
+        accountType: "personal",
+        password: TEST_PASSWORD,
+      });
+
+      expect(oldLogin.status).toBe(401);
+      expect(oldLogin.body.code).toBe("INVALID_CREDENTIALS");
+
+      // 3. New password must work
+      const newLogin = await request(app).post("/api/auth/login").send({
+        identifier: TEST_PHONE,
+        identifierType: "phone",
+        accountType: "personal",
+        password: NEW_PASSWORD,
+      });
+
+      expect(newLogin.status).toBe(200);
+      expect(newLogin.body.success).toBe(true);
+    });
+  });
+
+    /*
+  |--------------------------------------------------------------------------
   | Validation (Zod middleware)
   |--------------------------------------------------------------------------
   |

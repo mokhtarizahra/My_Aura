@@ -34,6 +34,7 @@ export const MESSAGES = {
   PASSWORD_EMPTY: "PASSWORD_EMPTY",
   PASSWORD_TOO_SHORT: "PASSWORD_TOO_SHORT",
   PASSWORD_TOO_LONG: "PASSWORD_TOO_LONG",
+  CURRENT_PASSWORD_REQUIRED: "CURRENT_PASSWORD_REQUIRED", 
 
   // ---------------------------------------------------------------
   // OTP

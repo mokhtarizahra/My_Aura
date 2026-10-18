@@ -1,7 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-
 import * as passwordService from '@/services/authentication/password.service';
 
 interface UsePasswordOptions {
@@ -11,16 +9,17 @@ interface UsePasswordOptions {
 /**
  * Password hook.
  *
- * Responsibilities:
- *   - Call the setPassword service.
- *   - Return structured results to the caller.
+ * Exposes two flows:
+ *   - setPassword: reset flow (unauthenticated, with verification token)
+ *   - changePassword: change flow (authenticated, with current password)
  *
- * It does NOT auto-login the user. After a password reset,
- * the page should redirect to /auth/login so the user
- * proves they know the new password.
+ * Neither flow auto-logs-in the user.
  */
 export function usePassword(options?: UsePasswordOptions) {
-  const setPassword = async (verificationToken: string, password: string) => {
+  const setPassword = async (
+    verificationToken: string,
+    password: string
+  ) => {
     try {
       await passwordService.setPassword(verificationToken, password);
       return { success: true as const };
@@ -31,5 +30,19 @@ export function usePassword(options?: UsePasswordOptions) {
     }
   };
 
-  return { setPassword };
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
+    try {
+      await passwordService.changePassword(currentPassword, newPassword);
+      return { success: true as const };
+    } catch (err) {
+      const errorCode = err instanceof Error ? err.message : 'NETWORK_ERROR';
+      options?.onError?.(errorCode);
+      return { success: false as const, error: errorCode };
+    }
+  };
+
+  return { setPassword, changePassword };
 }

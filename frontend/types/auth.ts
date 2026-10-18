@@ -143,6 +143,11 @@ export type SetPasswordInput = {
   password: string;
 };
 
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 // ─────────────────────────────────────────────────────────────────
 // Auth Context
 // ─────────────────────────────────────────────────────────────────

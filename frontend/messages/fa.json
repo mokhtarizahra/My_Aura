@@ -162,6 +162,33 @@
     "passwordSameAsOld": "رمز عبور جدید باید با رمز قبلی متفاوت باشد"
   }
 },
+"changePassword": {
+  "title": "تغییر رمز عبور",
+  "description": "برای امنیت حساب، رمز عبور فعلی و رمز جدید را وارد کنید",
+  "currentPassword": "رمز عبور فعلی",
+  "currentPasswordPlaceholder": "••••••••",
+  "currentPasswordRequired": "رمز عبور فعلی الزامی است",
+  "newPassword": "رمز عبور جدید",
+  "newPasswordPlaceholder": "••••••••",
+  "newPasswordRequired": "رمز عبور جدید الزامی است",
+  "newPasswordMin": "رمز عبور جدید باید حداقل ۸ کاراکتر باشد",
+  "newPasswordWeak": "رمز عبور باید شامل حرف و عدد باشد",
+  "confirmPassword": "تکرار رمز عبور جدید",
+  "confirmPasswordPlaceholder": "••••••••",
+  "confirmPasswordRequired": "تکرار رمز عبور الزامی است",
+  "confirmPasswordMismatch": "رمز عبور و تکرار آن یکسان نیستند",
+  "showPassword": "نمایش رمز عبور",
+  "hidePassword": "مخفی کردن رمز عبور",
+  "submit": "ذخیره رمز جدید",
+  "submitting": "در حال ذخیره...",
+  "backToDashboard": "بازگشت به داشبورد",
+  "errors": {
+    "invalidCurrentPassword": "رمز عبور فعلی اشتباه است",
+    "passwordSameAsOld": "رمز عبور جدید باید با رمز قبلی متفاوت باشد",
+    "changeFailed": "خطا در تغییر رمز عبور",
+    "validationFailed": "اطلاعات ارسالی نامعتبر است"
+  }
+},
 "redirect": {
   "errorTitle": "خطا",
   "invalidAccountType": "شما دسترسی لازم برای این صفحه را ندارید."

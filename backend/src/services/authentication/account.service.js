@@ -398,6 +398,66 @@ export const setAccountPassword = async ({
 };
 
 /**
+ * Change an account's password after verifying the current one.
+ *
+ * This is for the AUTHENTICATED change-password flow.
+ * For the forgot-password flow (unauthenticated, with a verification token),
+ * see setAccountPassword.
+ *
+ * Throws:
+ *   - invalidCurrentPassword  → if currentPassword does not match
+ *   - passwordSameAsOld       → if newPassword === currentPassword
+ */
+export const changeAccountPassword = async ({
+  accountId,
+  accountType,
+  currentPassword,
+  newPassword,
+}) => {
+  validateAccountId(accountId);
+  validateAccountType(accountType);
+
+  if (typeof currentPassword !== "string" || !currentPassword) {
+    throw authErrors.currentPasswordRequired();
+  }
+
+  if (typeof newPassword !== "string" || newPassword.length < 6) {
+    throw authErrors.passwordTooShort();
+  }
+
+  const AccountModel = getAccountModel(accountType);
+
+  // Fetch account with hash
+  const account = await AccountModel.findById(accountId).select(
+    "+passwordHash",
+  );
+
+  if (!account) {
+    throw authErrors.accountNotFound();
+  }
+
+  // 1. Verify current password
+  const isValid = await comparePassword(currentPassword, account.passwordHash);
+  if (!isValid) {
+    throw authErrors.invalidCurrentPassword();
+  }
+
+  // 2. Reject if new password equals the current one
+  const isSame = await bcrypt.compare(newPassword, account.passwordHash);
+  if (isSame) {
+    throw authErrors.passwordSameAsOld();
+  }
+
+  // 3. Hash and save
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  account.passwordHash = passwordHash;
+
+  await account.save();
+
+  return account;
+};
+
+/**
  * Check whether an account is active.
  */
 export const isAccountActive = (account) => {

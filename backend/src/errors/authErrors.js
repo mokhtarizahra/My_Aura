@@ -318,4 +318,18 @@ export const authErrors = {
       400,
       "New password must be different from the current one",
     ),
+
+      currentPasswordRequired: () =>
+    new AppError(
+      "CURRENT_PASSWORD_REQUIRED",
+      400,
+      "Current password is required",
+    ),
+
+  invalidCurrentPassword: () =>
+    new AppError(
+      "INVALID_CURRENT_PASSWORD",
+      401,
+      "Current password is incorrect",
+    ),
 };

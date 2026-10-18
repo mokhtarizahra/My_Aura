@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import {
+  changePassword,
   getSessionHistoryController,
   getSessions,
   loginWithPassword,
@@ -26,12 +27,14 @@ import {
 import { authenticateAccessToken } from "../middlewares/auth.middleware.js";
 
 import {
+  changePasswordSchema,
   loginSchema,
   passwordResetSchema,
   registerSchema,
   requestOTPSchema,
   verifyOTPSchema,
 } from "../validators/auth.validator.js";
+
 import { validateBody } from "../middlewares/validate.js";
 
 const router = Router();
@@ -105,6 +108,21 @@ router.post(
   passwordResetLimiter,
   validateBody(passwordResetSchema),
   setPassword,
+);
+
+/**
+ * Change password for an authenticated account.
+ *
+ * POST /api/auth/password/change
+ *
+ * Requires a valid access token.
+ * The body must contain both the current and the new password.
+ */
+router.post(
+  "/password/change",
+  authenticateAccessToken,
+  validateBody(changePasswordSchema),
+  changePassword,
 );
 
 /*
