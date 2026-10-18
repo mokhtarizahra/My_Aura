@@ -72,7 +72,11 @@ export function CompleteRegistrationForm({
 
   const { register: registerAccount } = useRegistration({
     onError: (code) => {
-      setErrorMessage(code);
+      const errorKeyMap: Record<string, string> = {
+        VALIDATION_FAILED: 'errors.validationFailed',
+      };
+      const translationKey = errorKeyMap[code];
+      setErrorMessage(translationKey ? t(translationKey) : code);
       onError?.(code);
     },
   });

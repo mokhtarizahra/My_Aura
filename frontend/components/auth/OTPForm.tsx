@@ -57,7 +57,11 @@ export function OTPForm({
 
   const { verifyOTP } = useOTP({
     onError: (code) => {
-      setErrorMessage(code);
+      const errorKeyMap: Record<string, string> = {
+        VALIDATION_FAILED: 'errors.validationFailed',
+      };
+      const translationKey = errorKeyMap[code];
+      setErrorMessage(translationKey ? t(translationKey) : code);
       onError?.(code);
     },
   });

@@ -164,22 +164,6 @@ describe("Authentication: authController", () => {
       expect(res.status).toHaveBeenCalledWith(200);
     });
 
-    it("should reject missing identifier", async () => {
-      const req = createReq({
-        body: {
-          identifierType: "phone",
-        },
-      });
-
-      const res = createRes();
-
-      await requestOTP(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-
-      expect(sendOTP).not.toHaveBeenCalled();
-    });
-
     it("should return conflict when account already exists", async () => {
       sendOTP.mockRejectedValue(authErrors.accountAlreadyExists());
 
@@ -252,24 +236,6 @@ describe("Authentication: authController", () => {
       });
 
       expect(res.status).toHaveBeenCalledWith(200);
-    });
-
-    it("should reject missing OTP", async () => {
-      const req = createReq({
-        body: {
-          identifier: "09121111111",
-          identifierType: "phone",
-          purpose: "registration",
-        },
-      });
-
-      const res = createRes();
-
-      await verifyOTPController(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-
-      expect(verifyOTP).not.toHaveBeenCalled();
     });
 
     it("should return 401 for invalid OTP", async () => {
@@ -348,26 +314,6 @@ describe("Authentication: authController", () => {
       });
 
       expect(res.status).toHaveBeenCalledWith(201);
-    });
-
-    it("should reject missing verification token", async () => {
-      const req = createReq({
-        body: {
-          firstName: "Zahra",
-          lastName: "Test",
-          password: "secret123",
-        },
-      });
-
-      const res = createRes();
-
-      await register(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-
-      expect(verifyVerificationToken).not.toHaveBeenCalled();
-
-      expect(registerPersonalAccount).not.toHaveBeenCalled();
     });
 
     it("should not trust identifier supplied by the client", async () => {
@@ -650,39 +596,6 @@ describe("Authentication: authController", () => {
       });
 
       expect(res.status).toHaveBeenCalledWith(200);
-    });
-
-    it("should reject missing verification token", async () => {
-      const req = createReq({
-        body: {
-          password: "newpassword",
-        },
-      });
-
-      const res = createRes();
-
-      await setPassword(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-
-      expect(verifyVerificationToken).not.toHaveBeenCalled();
-    });
-
-    it("should reject a short password", async () => {
-      const req = createReq({
-        body: {
-          verificationToken: "token",
-          password: "123",
-        },
-      });
-
-      const res = createRes();
-
-      await setPassword(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-
-      expect(verifyVerificationToken).not.toHaveBeenCalled();
     });
 
     it("should return 404 when the account does not exist", async () => {

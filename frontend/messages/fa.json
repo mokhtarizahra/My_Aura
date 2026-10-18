@@ -50,6 +50,7 @@
     "invalidCredentials": "نام کاربری یا رمز عبور نادرست است.",
     "accountNotActive": "حساب کاربری شما هنوز فعال نشده است.",
     "loginFailed": "خطا در ورود",
+    "validationFailed": "اطلاعات ارسالی نامعتبر است",
     "generic": "خطایی رخ داده است. دوباره تلاش کنید."
   }
 },
@@ -65,6 +66,7 @@
     "alreadyRegistered": "قبلاً ثبت‌نام کرده‌اید؟",
     "login": "وارد شوید",
     "errors": {
+      "validationFailed": "اطلاعات ارسالی نامعتبر است",
       "sendFailed": "خطا در ارسال کد تأیید"
     },
     "toast": {
@@ -96,6 +98,7 @@
   "alreadyRegistered": "قبلاً ثبت‌نام کرده‌اید؟",
   "login": "وارد شوید",
   "errors": {
+    "validationFailed": "اطلاعات ارسالی نامعتبر است",
     "verifyFailed": "خطا در تأیید کد",
     "resendFailed": "خطا در ارسال مجدد"
   },
@@ -132,6 +135,7 @@
   "hasAccount": "قبلاً ثبت‌نام کرده‌اید؟",
   "login": "وارد شوید",
   "errors": {
+    "validationFailed": "اطلاعات ارسالی نامعتبر است",
     "registrationFailed": "خطا در ثبت‌نام"
   }
 },
@@ -153,6 +157,7 @@
   "submitting": "در حال تغییر...",
   "backToLogin": "بازگشت به صفحه ورود",
   "errors": {
+    "validationFailed": "اطلاعات ارسالی نامعتبر است",
     "resetFailed": "خطا در تغییر رمز عبور",
     "passwordSameAsOld": "رمز عبور جدید باید با رمز قبلی متفاوت باشد"
   }

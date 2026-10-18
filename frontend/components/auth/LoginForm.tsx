@@ -89,6 +89,7 @@ export function LoginForm({ onSuccess, onError }: LoginFormProps) {
         INVALID_CREDENTIALS: 'errors.invalidCredentials',
         ACCOUNT_NOT_ACTIVE: 'errors.accountNotActive',
         LOGIN_FAILED: 'errors.loginFailed',
+        VALIDATION_FAILED: 'errors.validationFailed',
       };
 
       const translationKey = errorKeyMap[errorCode];

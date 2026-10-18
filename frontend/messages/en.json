@@ -50,6 +50,7 @@
     "invalidCredentials": "Invalid phone number or password",
     "accountNotActive": "Your account has not been activated yet",
     "loginFailed": "Login failed",
+    "validationFailed": "Invalid input data",
     "generic": "Something went wrong. Please try again."
   }
 },
@@ -65,6 +66,7 @@
   "alreadyRegistered": "Already registered?",
   "login": "Sign in",
   "errors": {
+    "validationFailed": "Invalid input data",
     "sendFailed": "Failed to send verification code"
   },
   "toast": {
@@ -96,6 +98,7 @@
   "alreadyRegistered": "Already registered?",
   "login": "Sign in",
   "errors": {
+    "validationFailed": "Invalid input data",
     "verifyFailed": "Failed to verify code",
     "resendFailed": "Failed to resend code"
   },
@@ -132,6 +135,7 @@
   "hasAccount": "Already have an account?",
   "login": "Sign in",
   "errors": {
+    "validationFailed": "Invalid input data",
     "registrationFailed": "Registration failed"
   }
 },
@@ -153,6 +157,7 @@
   "submitting": "Changing...",
   "backToLogin": "Back to sign in",
   "errors": {
+    "validationFailed": "Invalid input data",
     "resetFailed": "Password reset failed",
     "passwordSameAsOld": "New password must be different from the current one"
   }

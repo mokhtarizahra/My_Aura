@@ -837,4 +837,197 @@ describe("Authentication Integration", () => {
       }
     });
   });
+
+    /*
+  |--------------------------------------------------------------------------
+  | Validation (Zod middleware)
+  |--------------------------------------------------------------------------
+  |
+  | These tests verify that the Zod-based validation middleware
+  | rejects malformed request bodies BEFORE they reach the controller.
+  |
+  */
+
+  describe("Validation", () => {
+    it("should reject OTP request without identifier", async () => {
+      const response = await request(app)
+        .post("/api/auth/otp/request")
+        .send({ identifierType: "phone" });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "identifier",
+            code: "IDENTIFIER_REQUIRED",
+          }),
+        ])
+      );
+    });
+
+    it("should reject OTP request with invalid identifierType", async () => {
+      const response = await request(app)
+        .post("/api/auth/otp/request")
+        .send({ identifier: "09121111111", identifierType: "carrier-pigeon" });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "identifierType",
+            code: "IDENTIFIER_TYPE_INVALID",
+          }),
+        ])
+      );
+    });
+
+    it("should reject OTP verify with invalid OTP format", async () => {
+      const response = await request(app)
+        .post("/api/auth/otp/verify")
+        .send({
+          identifier: "09121111111",
+          identifierType: "phone",
+          purpose: "registration",
+          otp: "abc",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "otp",
+            code: "OTP_FORMAT_INVALID",
+          }),
+        ])
+      );
+    });
+
+    it("should reject login without password", async () => {
+      const response = await request(app)
+        .post("/api/auth/login")
+        .send({ identifier: "09121111111", identifierType: "phone" });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "password",
+            code: "PASSWORD_REQUIRED",
+          }),
+        ])
+      );
+    });
+
+    it("should reject login with invalid accountType", async () => {
+      const response = await request(app)
+        .post("/api/auth/login")
+        .send({
+          identifier: "09121111111",
+          identifierType: "phone",
+          accountType: "alien",
+          password: "Password123",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "accountType",
+            code: "ACCOUNT_TYPE_INVALID",
+          }),
+        ])
+      );
+    });
+
+    it("should reject register with a short password", async () => {
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({
+          verificationToken: "dummy-token",
+          firstName: "Zahra",
+          lastName: "Test",
+          password: "123",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "password",
+            code: "PASSWORD_TOO_SHORT",
+          }),
+        ])
+      );
+    });
+
+    it("should reject register with a too-short first name", async () => {
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({
+          verificationToken: "dummy-token",
+          firstName: "Z",
+          lastName: "Test",
+          password: "Password123",
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "firstName",
+            code: "FIRST_NAME_TOO_SHORT",
+          }),
+        ])
+      );
+    });
+
+    it("should reject password reset without verificationToken", async () => {
+      const response = await request(app)
+        .post("/api/auth/password/reset")
+        .send({ password: "Password123" });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "verificationToken",
+            code: "VERIFICATION_TOKEN_REQUIRED",
+          }),
+        ])
+      );
+    });
+  });
+
 });

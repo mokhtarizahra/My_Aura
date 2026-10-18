@@ -123,20 +123,12 @@ const handleError = (res, error) => {
  */
 export const requestOTP = async (req, res) => {
   try {
-    const { identifier, identifierType } = req.body ?? {};
-
-    if (typeof identifier !== "string" || !identifier.trim()) {
-      throw authErrors.identifierRequired();
-    }
-
-    if (!identifierType) {
-      throw authErrors.identifierTypeInvalid();
-    }
+    const { identifier, identifierType, purpose = "registration" } = req.body;
 
     const result = await sendOTP({
       identifier,
       identifierType,
-      purpose: req.body.purpose || "registration",
+      purpose,
     });
 
     return success(res, {
@@ -146,7 +138,6 @@ export const requestOTP = async (req, res) => {
     return handleError(res, error);
   }
 };
-
 /**
  * Verify a registration OTP.
  *
@@ -160,19 +151,7 @@ export const verifyOTPController = async (req, res) => {
       identifierType,
       purpose = "registration",
       otp,
-    } = req.body ?? {};
-
-    if (typeof identifier !== "string" || !identifier.trim()) {
-      throw authErrors.identifierRequired();
-    }
-
-    if (!identifierType) {
-      throw authErrors.identifierTypeInvalid();
-    }
-
-    if (otp === undefined || otp === null || otp === "") {
-      throw authErrors.otpRequired();
-    }
+    } = req.body;
 
     const result = await verifyOTP({
       identifier,
@@ -197,11 +176,7 @@ export const verifyOTPController = async (req, res) => {
  */
 export const register = async (req, res) => {
   try {
-    const { verificationToken, firstName, lastName, password } = req.body ?? {};
-
-    if (!verificationToken) {
-      throw authErrors.verificationTokenRequired();
-    }
+    const { verificationToken, firstName, lastName, password } = req.body;
 
     const verification = verifyVerificationToken(
       verificationToken,
@@ -247,19 +222,7 @@ export const loginWithPassword = async (req, res) => {
       identifierType,
       accountType = "personal",
       password,
-    } = req.body ?? {};
-
-    if (typeof identifier !== "string" || !identifier.trim()) {
-      throw authErrors.identifierRequired();
-    }
-
-    if (!identifierType) {
-      throw authErrors.identifierTypeInvalid();
-    }
-
-    if (typeof password !== "string" || !password) {
-      throw authErrors.passwordRequired();
-    }
+    } = req.body;
 
     const account = await findAccountForLogin({
       identifier,
@@ -267,9 +230,6 @@ export const loginWithPassword = async (req, res) => {
       accountType,
     });
 
-    /*
-     * Do not reveal whether the account exists.
-     */
     if (!account) {
       throw authErrors.invalidCredentials();
     }
@@ -322,15 +282,7 @@ export const loginWithPassword = async (req, res) => {
  */
 export const setPassword = async (req, res) => {
   try {
-    const { verificationToken, password } = req.body ?? {};
-
-    if (!verificationToken) {
-      throw authErrors.verificationTokenRequired();
-    }
-
-    if (typeof password !== "string" || password.length < 6) {
-      throw authErrors.passwordTooShort();
-    }
+    const { verificationToken, password } = req.body;
 
     const verification = verifyVerificationToken(
       verificationToken,
@@ -339,12 +291,8 @@ export const setPassword = async (req, res) => {
 
     const account = await findPersonalAccount(
       verification.identifierType === "phone"
-        ? {
-            phone: verification.identifier,
-          }
-        : {
-            email: verification.identifier,
-          },
+        ? { phone: verification.identifier }
+        : { email: verification.identifier },
     );
 
     if (!account) {

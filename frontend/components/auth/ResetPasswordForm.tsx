@@ -65,6 +65,7 @@ export function ResetPasswordForm({
       const errorKeyMap: Record<string, string> = {
         PASSWORD_SAME_AS_OLD: 'errors.passwordSameAsOld',
         PASSWORD_TOO_SHORT: 'passwordMin',
+        VALIDATION_FAILED: 'errors.validationFailed',
       };
 
       const translationKey = errorKeyMap[code];
