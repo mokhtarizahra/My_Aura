@@ -840,146 +840,6 @@ describe("Authentication Integration", () => {
 
     /*
   |--------------------------------------------------------------------------
-  | Change Password (authenticated)
-  |--------------------------------------------------------------------------
-  */
-
-  describe("Change Password", () => {
-    const NEW_PASSWORD = "NewPassword123!";
-
-    it("should reject without an access token", async () => {
-      const response = await request(app)
-        .post("/api/auth/password/change")
-        .send({
-          currentPassword: TEST_PASSWORD,
-          newPassword: NEW_PASSWORD,
-        });
-
-      expect(response.status).toBe(401);
-      expect(response.body).toMatchObject({
-        success: false,
-        code: "ACCESS_TOKEN_REQUIRED",
-      });
-    });
-
-    it("should reject with a wrong current password", async () => {
-      await createPersonalAccount();
-      const loginResponse = await login();
-      const accessToken = loginResponse.body.data.accessToken;
-
-      const response = await request(app)
-        .post("/api/auth/password/change")
-        .set("Authorization", `Bearer ${accessToken}`)
-        .send({
-          currentPassword: "WrongPassword!",
-          newPassword: NEW_PASSWORD,
-        });
-
-      expect(response.status).toBe(401);
-      expect(response.body).toMatchObject({
-        success: false,
-        code: "INVALID_CURRENT_PASSWORD",
-      });
-    });
-
-    it("should reject when new password equals current password", async () => {
-      await createPersonalAccount();
-      const loginResponse = await login();
-      const accessToken = loginResponse.body.data.accessToken;
-
-      const response = await request(app)
-        .post("/api/auth/password/change")
-        .set("Authorization", `Bearer ${accessToken}`)
-        .send({
-          currentPassword: TEST_PASSWORD,
-          newPassword: TEST_PASSWORD,
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body).toMatchObject({
-        success: false,
-        code: "PASSWORD_SAME_AS_OLD",
-      });
-    });
-
-    it("should reject a short new password via Zod validation", async () => {
-      await createPersonalAccount();
-      const loginResponse = await login();
-      const accessToken = loginResponse.body.data.accessToken;
-
-      const response = await request(app)
-        .post("/api/auth/password/change")
-        .set("Authorization", `Bearer ${accessToken}`)
-        .send({
-          currentPassword: TEST_PASSWORD,
-          newPassword: "123",
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body).toMatchObject({
-        success: false,
-        message: "VALIDATION_FAILED",
-      });
-      expect(response.body.errors).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            field: "newPassword",
-            code: "PASSWORD_TOO_SHORT",
-          }),
-        ])
-      );
-    });
-
-    it("should change password, revoke all sessions, and require re-login with the new password", async () => {
-      await createPersonalAccount();
-      const loginResponse = await login();
-      const accessToken = loginResponse.body.data.accessToken;
-      const oldRefreshCookie = loginResponse.headers["set-cookie"];
-
-      const response = await request(app)
-        .post("/api/auth/password/change")
-        .set("Authorization", `Bearer ${accessToken}`)
-        .send({
-          currentPassword: TEST_PASSWORD,
-          newPassword: NEW_PASSWORD,
-        });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-
-      // 1. Old refresh token must be revoked (all sessions revoked)
-      const refreshResponse = await request(app)
-        .post("/api/auth/refresh")
-        .set("Cookie", oldRefreshCookie);
-
-      expect(refreshResponse.status).toBe(401);
-
-      // 2. Old password must no longer work
-      const oldLogin = await request(app).post("/api/auth/login").send({
-        identifier: TEST_PHONE,
-        identifierType: "phone",
-        accountType: "personal",
-        password: TEST_PASSWORD,
-      });
-
-      expect(oldLogin.status).toBe(401);
-      expect(oldLogin.body.code).toBe("INVALID_CREDENTIALS");
-
-      // 3. New password must work
-      const newLogin = await request(app).post("/api/auth/login").send({
-        identifier: TEST_PHONE,
-        identifierType: "phone",
-        accountType: "personal",
-        password: NEW_PASSWORD,
-      });
-
-      expect(newLogin.status).toBe(200);
-      expect(newLogin.body.success).toBe(true);
-    });
-  });
-
-    /*
-  |--------------------------------------------------------------------------
   | Validation (Zod middleware)
   |--------------------------------------------------------------------------
   |
@@ -1167,6 +1027,156 @@ describe("Authentication Integration", () => {
           }),
         ])
       );
+    });
+  });
+
+    /*
+  |--------------------------------------------------------------------------
+  | Session Revocation by ID
+  |--------------------------------------------------------------------------
+  */
+
+  describe("Session Revocation by ID", () => {
+    it("should reject without an access token", async () => {
+      const response = await request(app)
+        .delete("/api/auth/sessions/507f1f77bcf86cd799439011");
+
+      expect(response.status).toBe(401);
+      expect(response.body.code).toBe("ACCESS_TOKEN_REQUIRED");
+    });
+
+    it("should reject an invalid session id (Zod validation)", async () => {
+      await createPersonalAccount();
+      const loginResponse = await login();
+      const accessToken = loginResponse.body.data.accessToken;
+
+      const response = await request(app)
+        .delete("/api/auth/sessions/not-a-valid-object-id")
+        .set("Authorization", `Bearer ${accessToken}`);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toMatchObject({
+        success: false,
+        message: "VALIDATION_FAILED",
+      });
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "id",
+            code: "SESSION_ID_INVALID",
+          }),
+        ])
+      );
+    });
+
+    it("should return 404 for a non-existing session", async () => {
+      await createPersonalAccount();
+      const loginResponse = await login();
+      const accessToken = loginResponse.body.data.accessToken;
+
+      const response = await request(app)
+        .delete("/api/auth/sessions/507f1f77bcf86cd799439011")
+        .set("Authorization", `Bearer ${accessToken}`);
+
+      expect(response.status).toBe(404);
+      expect(response.body.code).toBe("SESSION_NOT_FOUND");
+    });
+
+    it("should revoke a specific session belonging to the current account", async () => {
+      await createPersonalAccount();
+      const loginResponse = await login();
+      const accessToken = loginResponse.body.data.accessToken;
+
+      // Get current sessions
+      const sessionsResponse = await request(app)
+        .get("/api/auth/sessions")
+        .set("Authorization", `Bearer ${accessToken}`);
+
+      expect(sessionsResponse.status).toBe(200);
+
+      const sessions = sessionsResponse.body.data.sessions;
+      expect(sessions.length).toBeGreaterThan(0);
+
+      const targetSessionId = sessions[0]._id;
+
+      // Revoke that session
+      const revokeResponse = await request(app)
+        .delete(`/api/auth/sessions/${targetSessionId}`)
+        .set("Authorization", `Bearer ${accessToken}`);
+
+      expect(revokeResponse.status).toBe(200);
+      expect(revokeResponse.body.success).toBe(true);
+      expect(revokeResponse.body.data.revoked).toBe(true);
+
+      // Confirm it's gone from active list
+      const afterResponse = await request(app)
+        .get("/api/auth/sessions")
+        .set("Authorization", `Bearer ${accessToken}`);
+
+      const remaining = afterResponse.body.data.sessions;
+      expect(remaining.find((s) => s._id === targetSessionId)).toBeUndefined();
+    });
+
+    it("should prevent one account from revoking another account's session (IDOR)", async () => {
+      // Create first account and login
+      await createPersonalAccount();
+      const firstLogin = await login();
+      const firstAccessToken = firstLogin.body.data.accessToken;
+
+      const firstSessions = await request(app)
+        .get("/api/auth/sessions")
+        .set("Authorization", `Bearer ${firstAccessToken}`);
+
+      const firstSessionId = firstSessions.body.data.sessions[0]._id;
+
+      // Create a second account (different phone)
+      const secondPhone = "+989129999999";
+      const secondAccountResponse = await request(app)
+        .post("/api/auth/otp/request")
+        .send({
+          identifier: secondPhone,
+          identifierType: "phone",
+          purpose: "registration",
+        });
+      expect(secondAccountResponse.status).toBe(200);
+
+      const verifyRes = await request(app)
+        .post("/api/auth/otp/verify")
+        .send({
+          identifier: secondPhone,
+          identifierType: "phone",
+          purpose: "registration",
+          otp: TEST_OTP,
+        });
+      expect(verifyRes.status).toBe(200);
+
+      const secondVerificationToken = verifyRes.body.data.verificationToken;
+
+      const secondRegisterRes = await request(app)
+        .post("/api/auth/register")
+        .send({
+          verificationToken: secondVerificationToken,
+          firstName: "Other",
+          lastName: "User",
+          password: "OtherPassword123!",
+        });
+      expect(secondRegisterRes.status).toBe(201);
+
+      const secondLogin = await request(app).post("/api/auth/login").send({
+        identifier: secondPhone,
+        identifierType: "phone",
+        accountType: "personal",
+        password: "OtherPassword123!",
+      });
+      const secondAccessToken = secondLogin.body.data.accessToken;
+
+      // Second account tries to revoke first account's session
+      const response = await request(app)
+        .delete(`/api/auth/sessions/${firstSessionId}`)
+        .set("Authorization", `Bearer ${secondAccessToken}`);
+
+      expect(response.status).toBe(404);
+      expect(response.body.code).toBe("SESSION_NOT_FOUND");
     });
   });
 

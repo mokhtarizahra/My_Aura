@@ -189,6 +189,36 @@
     "validationFailed": "Invalid input data"
   }
 },
+"sessions": {
+  "title": "Active Devices",
+  "description": "All devices currently signed in to your account",
+  "loading": "Loading sessions...",
+  "empty": "No active devices found",
+  "errors": {
+    "fetchFailed": "Failed to load sessions",
+    "revokeFailed": "Failed to revoke session",
+    "sessionNotFound": "Session not found"
+  },
+  "device": {
+    "mobile": "Mobile",
+    "tablet": "Tablet",
+    "desktop": "Desktop"
+  },
+  "browser": {
+    "chrome": "Chrome",
+    "firefox": "Firefox",
+    "safari": "Safari",
+    "edge": "Edge",
+    "unknown": "Unknown browser"
+  },
+  "ip": "IP",
+  "createdAt": "Signed in",
+  "revoke": "Sign out this device",
+  "revoking": "Signing out...",
+  "revokeAll": "Sign out of all devices",
+  "revokingAll": "Signing out of all...",
+  "backToDashboard": "Back to dashboard"
+},
 "redirect": {
   "errorTitle": "Error",
   "invalidAccountType": "You don't have permission to access this page."

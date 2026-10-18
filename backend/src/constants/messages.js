@@ -58,4 +58,9 @@ export const MESSAGES = {
   LAST_NAME_REQUIRED: "LAST_NAME_REQUIRED",
   LAST_NAME_TOO_SHORT: "LAST_NAME_TOO_SHORT",
   LAST_NAME_TOO_LONG: "LAST_NAME_TOO_LONG",
+
+  // ---------------------------------------------------------------
+  // Session
+  // ---------------------------------------------------------------
+  SESSION_ID_INVALID: "SESSION_ID_INVALID",
 };

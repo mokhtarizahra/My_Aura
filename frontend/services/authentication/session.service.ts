@@ -37,6 +37,26 @@ export const revokeSession = async (): Promise<MessageResponse> => {
 };
 
 /**
+ * Revoke a specific session by its ID.
+ *
+ * Backend endpoint: DELETE /auth/sessions/:id
+ * Requires: access token
+ * The session must belong to the current account.
+ */
+export const revokeSessionById = async (
+  sessionId: string
+): Promise<{ revoked: boolean }> => {
+  try {
+    const { data } = await api.delete(`/auth/sessions/${sessionId}`);
+    if (data.success === false)
+      throw new Error(data.code || 'SESSION_REVOKE_FAILED');
+    return data.data ?? { revoked: false };
+  } catch (err) {
+    throw new Error(extractErrorCode(err));
+  }
+};
+
+/**
  * Revoke all active sessions for the current user.
  *
  * Backend endpoint: DELETE /auth/sessions

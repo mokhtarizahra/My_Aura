@@ -147,3 +147,15 @@ export const changePasswordSchema = z.object({
     .min(6, MESSAGES.PASSWORD_TOO_SHORT)
     .max(200, MESSAGES.PASSWORD_TOO_LONG),
 });
+
+/*
+|--------------------------------------------------------------------------
+| Session params
+|--------------------------------------------------------------------------
+*/
+
+export const sessionIdParamSchema = z.object({
+  id: z
+    .string({ error: MESSAGES.SESSION_ID_INVALID })
+    .regex(/^[a-fA-F0-9]{24}$/, MESSAGES.SESSION_ID_INVALID),
+});

@@ -189,6 +189,36 @@
     "validationFailed": "اطلاعات ارسالی نامعتبر است"
   }
 },
+"sessions": {
+  "title": "دستگاه‌های فعال",
+  "description": "لیست تمام دستگاه‌هایی که به حساب کاربری شما وارد شده‌اند",
+  "loading": "در حال بارگذاری نشست‌ها...",
+  "empty": "هیچ دستگاه فعالی یافت نشد",
+  "errors": {
+    "fetchFailed": "خطا در دریافت لیست دستگاه‌ها",
+    "revokeFailed": "خطا در بستن نشست",
+    "sessionNotFound": "نشست یافت نشد"
+  },
+  "device": {
+    "mobile": "موبایل",
+    "tablet": "تبلت",
+    "desktop": "دسکتاپ"
+  },
+  "browser": {
+    "chrome": "کروم",
+    "firefox": "فایرفاکس",
+    "safari": "سافاری",
+    "edge": "اج",
+    "unknown": "مرورگر ناشناخته"
+  },
+  "ip": "IP",
+  "createdAt": "ورود در",
+  "revoke": "خروج از این دستگاه",
+  "revoking": "در حال خروج...",
+  "revokeAll": "خروج از همه‌ی دستگاه‌ها",
+  "revokingAll": "در حال خروج از همه...",
+  "backToDashboard": "بازگشت به داشبورد"
+},
 "redirect": {
   "errorTitle": "خطا",
   "invalidAccountType": "شما دسترسی لازم برای این صفحه را ندارید."

@@ -24,6 +24,7 @@ import {
   getSessionHistory,
   revokeAllRefreshTokens,
   revokeRefreshToken,
+  revokeSessionById,
   rotateRefreshToken,
   validateRefreshToken,
 } from "../services/authentication/refreshToken.service.js";
@@ -102,6 +103,8 @@ const handleError = (res, error) => {
       message: error.message,
     });
   }
+
+    console.error('[handleError] unexpected error:', error);
 
   // Unknown errors → generic 500
   return res.status(500).json({
@@ -522,6 +525,32 @@ export const revokeSession = async (req, res) => {
     }
 
     return success(res);
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+
+/**
+ * Revoke a specific session by its ID.
+ *
+ * The session must belong to the currently authenticated account.
+ * Input validation (ObjectId format) is handled by validateParams
+ * middleware at the route level — this controller stays clean.
+ */
+export const revokeSessionByIdController = async (req, res) => {
+  try {
+    const { id: sessionId } = req.params;
+    const { accountId, accountType } = req.auth;
+
+    const revoked = await revokeSessionById({
+      sessionId,
+      accountId,
+      accountType,
+    });
+
+    return success(res, {
+      data: { revoked },
+    });
   } catch (error) {
     return handleError(res, error);
   }

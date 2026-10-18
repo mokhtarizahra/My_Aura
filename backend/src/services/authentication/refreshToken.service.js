@@ -218,6 +218,51 @@ export const revokeAllRefreshTokens = async ({ accountId, accountType }) => {
 };
 
 /**
+ * Revoke a specific refresh-token session by its ID.
+ *
+ * Security:
+ *   The session must belong to the given account (accountId + accountType).
+ *   This prevents IDOR attacks where one user tries to revoke another
+ *   user's session by guessing IDs.
+ *
+ * Behavior:
+ *   - If the session does not exist or does not belong to the account → throws 404.
+ *   - If already revoked → returns false (idempotent).
+ *   - If successfully revoked → returns true.
+ */
+export const revokeSessionById = async ({
+  sessionId,
+  accountId,
+  accountType,
+}) => {
+  if (!sessionId) {
+    throw authErrors.sessionNotFound();
+  }
+
+  validateAccountId(accountId);
+  validateAccountType(accountType);
+
+  const session = await RefreshToken.findOne({
+    _id: sessionId,
+    accountId,
+    accountType,
+  });
+
+  if (!session) {
+    throw authErrors.sessionNotFound();
+  }
+
+  if (session.revokedAt) {
+    return false;
+  }
+
+  session.revokedAt = new Date();
+  await session.save();
+
+  return true;
+};
+
+/**
  * Return all currently active sessions
  * belonging to one account.
  *

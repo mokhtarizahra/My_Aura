@@ -11,6 +11,7 @@ import {
   requestOTP,
   revokeAllSessions,
   revokeSession,
+  revokeSessionByIdController,
   setPassword,
   verifyOTPController,
 } from "../controllers/authController.js";
@@ -32,10 +33,11 @@ import {
   passwordResetSchema,
   registerSchema,
   requestOTPSchema,
+  sessionIdParamSchema,
   verifyOTPSchema,
 } from "../validators/auth.validator.js";
 
-import { validateBody } from "../middlewares/validate.js";
+import { validateBody, validateParams } from "../middlewares/validate.js";
 
 const router = Router();
 
@@ -195,5 +197,19 @@ router.delete("/sessions/current", revokeSession);
  * applies to the authenticated account.
  */
 router.delete("/sessions", authenticateAccessToken, revokeAllSessions);
+
+/**
+ * Revoke a specific session by ID.
+ *
+ * DELETE /api/auth/sessions/:id
+ *
+ * The session must belong to the currently authenticated account.
+ */
+router.delete(
+  "/sessions/:id",
+  authenticateAccessToken,
+  validateParams(sessionIdParamSchema),
+  revokeSessionByIdController,
+);
 
 export default router;
