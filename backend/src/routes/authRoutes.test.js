@@ -23,6 +23,14 @@ vi.mock("../controllers/authController.js", () => ({
     res.status(200).json({ controller: "setPassword" }),
   ),
 
+  changePassword: vi.fn((req, res) =>
+    res.status(200).json({ controller: "changePassword" }),
+  ),
+
+  revokeSessionByIdController: vi.fn((req, res) =>
+    res.status(200).json({ controller: "revokeSessionByIdController" }),
+  ),
+
   refreshAccessToken: vi.fn((req, res) =>
     res.status(200).json({ controller: "refreshAccessToken" }),
   ),
@@ -107,6 +115,8 @@ describe("Authentication: authRoutes", () => {
     it("should route POST /register to register", async () => {
       const response = await request(app).post("/api/auth/register").send({
         verificationToken: "verification-token",
+        firstName: "Ali",
+        lastName: "Rezaei",
         password: "StrongPassword123!",
       });
 

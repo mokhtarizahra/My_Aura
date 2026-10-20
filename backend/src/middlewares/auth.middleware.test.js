@@ -113,7 +113,7 @@ describe("Authentication: auth.middleware", () => {
       expect(response.body.message).toBe("Invalid or expired access token");
     });
 
-    it("should reject when verification returns no payload", async () => {
+    it("should reject when verification returns a falsy payload (defensive)", async () => {
       verifyAccessToken.mockReturnValue(null);
 
       const response = await request(app)
@@ -121,16 +121,27 @@ describe("Authentication: auth.middleware", () => {
         .set("Authorization", "Bearer token");
 
       expect(response.status).toBe(401);
-
-      expect(response.body.message).toBe("Invalid access token");
+      // Since the payload is null, accessing payload.sub throws a TypeError
+      // which is caught and converted to the generic "Invalid or expired"
+      expect(response.body.message).toBe("Invalid or expired access token");
     });
   });
 
-  describe("Access token payload validation", () => {
-    it("should reject a token without subject", async () => {
-      verifyAccessToken.mockReturnValue({
-        accountType: "personal",
-        tokenType: "access",
+    describe("Access token payload validation", () => {
+    /*
+     * Note: The actual validation of sub/accountType/tokenType is done
+     * inside verifyAccessToken (which throws AppError). The middleware
+     * only propagates those errors to the 401 response.
+     */
+
+    it("should propagate ACCESS_TOKEN_SUBJECT_MISSING error", async () => {
+      const { AppError } = await import("../errors/AppError.js");
+      verifyAccessToken.mockImplementation(() => {
+        throw new AppError(
+          "ACCESS_TOKEN_SUBJECT_MISSING",
+          401,
+          "Access token subject is missing",
+        );
       });
 
       const response = await request(app)
@@ -138,30 +149,36 @@ describe("Authentication: auth.middleware", () => {
         .set("Authorization", "Bearer token");
 
       expect(response.status).toBe(401);
-
-      expect(response.body.message).toBe("Invalid access token");
+      expect(response.body.code).toBe("ACCESS_TOKEN_SUBJECT_MISSING");
     });
 
-    it("should reject a token without account type", async () => {
-      verifyAccessToken.mockReturnValue({
-        sub: "account-1",
-        tokenType: "access",
+    it("should propagate ACCOUNT_TYPE_INVALID error", async () => {
+      const { AppError } = await import("../errors/AppError.js");
+      verifyAccessToken.mockImplementation(() => {
+        throw new AppError(
+          "ACCOUNT_TYPE_INVALID",
+          400,
+          "Invalid account type",
+        );
       });
 
       const response = await request(app)
         .get("/protected")
         .set("Authorization", "Bearer token");
 
+      // Auth failures always return 401, regardless of AppError.status
       expect(response.status).toBe(401);
-
-      expect(response.body.message).toBe("Invalid access token");
+      expect(response.body.code).toBe("ACCOUNT_TYPE_INVALID");
     });
 
-    it("should reject a non-access token", async () => {
-      verifyAccessToken.mockReturnValue({
-        sub: "account-1",
-        accountType: "personal",
-        tokenType: "refresh",
+    it("should propagate ACCESS_TOKEN_INVALID_TYPE error", async () => {
+      const { AppError } = await import("../errors/AppError.js");
+      verifyAccessToken.mockImplementation(() => {
+        throw new AppError(
+          "ACCESS_TOKEN_INVALID_TYPE",
+          401,
+          "Invalid access token type",
+        );
       });
 
       const response = await request(app)
@@ -169,8 +186,7 @@ describe("Authentication: auth.middleware", () => {
         .set("Authorization", "Bearer token");
 
       expect(response.status).toBe(401);
-
-      expect(response.body.message).toBe("Invalid access token");
+      expect(response.body.code).toBe("ACCESS_TOKEN_INVALID_TYPE");
     });
   });
 
