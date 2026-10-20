@@ -3,10 +3,12 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
+
 import { ROUTES } from '@/constants/routes';
+
 import { storage } from './storage';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface QueuedRequest {
@@ -58,13 +60,12 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
 
-     if (error.response?.status === 403) {
+    if (error.response?.status === 403) {
       // Run only in a browser environment
       if (typeof window !== 'undefined') {
         // Clearing tokens (optional – since the user does not have access)
         storage.removeAccessToken();
-        storage.removeRefreshToken();
-        
+
         // Go to page 403
         window.location.href = ROUTES.FORBIDDEN;
       }
@@ -92,32 +93,20 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const storedRefreshToken = storage.getRefreshToken();
-
-      // If no refresh token, logout immediately
-      if (!storedRefreshToken) {
-        sessionStorage.clear();
-        window.location.href = ROUTES.LOGIN;
-        return Promise.reject(error);
-      }
-
       try {
         // Create a temporary axios instance without interceptors to avoid infinite loop
-        const refreshResponse = await axios.post(
-          `${API_URL}/auth/refresh-token`,
-          { refreshToken: storedRefreshToken },
-          { withCredentials: true }
-        );
+        const refreshResponse = await axios.post(`${API_URL}/auth/refresh`, {
+          withCredentials: true,
+        });
 
-        const { accessToken, refreshToken } = refreshResponse.data;
+        const { accessToken } = refreshResponse.data.data;
 
         // Update tokens in storage
         storage.setAccessToken(accessToken);
-        storage.setRefreshToken(refreshToken);
 
         window.dispatchEvent(
           new CustomEvent('tokensRefreshed', {
-            detail: { accessToken, refreshToken },
+            detail: { accessToken },
           })
         );
         // Process queued requests

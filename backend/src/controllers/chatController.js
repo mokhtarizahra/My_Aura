@@ -8,13 +8,15 @@ export const sendMessage = async (req, res) => {
     const { receiverId, content } = req.body;
 
     if (!receiverId || !content) {
-      return res.status(400).json({ message: "receiverId and content required" });
+      return res
+        .status(400)
+        .json({ message: "receiverId and content required" });
     }
 
     // Check match
     const match = await Match.findOne({
       users: { $all: [sender, receiverId] },
-      status: "active"
+      status: "active",
     });
 
     if (!match) {
@@ -23,13 +25,13 @@ export const sendMessage = async (req, res) => {
 
     // Find or create conversation
     let conversation = await Conversation.findOne({
-      participants: { $all: [sender, receiverId] }
+      participants: { $all: [sender, receiverId] },
     });
 
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [sender, receiverId],
-        match: match._id
+        match: match._id,
       });
     }
 
@@ -37,7 +39,7 @@ export const sendMessage = async (req, res) => {
     const message = await Chat.create({
       conversation: conversation._id,
       sender,
-      content
+      content,
     });
 
     // Update conversation info
@@ -47,17 +49,15 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json({
       message: "Message sent",
-      data: message
+      data: message,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
-// Get messages 
+// Get messages
 export const getMessages = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -73,11 +73,11 @@ export const getMessages = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const messages = await Chat.find({ conversation: conversationId })
-      .sort({ createdAt: 1 });
+    const messages = await Chat.find({ conversation: conversationId }).sort({
+      createdAt: 1,
+    });
 
     res.status(200).json(messages);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

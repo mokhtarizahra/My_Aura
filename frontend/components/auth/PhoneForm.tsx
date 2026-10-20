@@ -1,8 +1,8 @@
-// components/auth/PhoneForm.tsx
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Phone, Send } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -20,34 +20,55 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROUTES } from '@/constants/routes';
-import { usePhone } from '@/hooks/usePhone';
-import Link from 'next/link';
+import { usePhone } from '@/hooks/authentication/usePhone';
+import { Link } from '@/i18n/navigation';
+import { toEnglishDigits } from '@/lib/numbers';
+import { OTPPurpose } from '@/types/auth';
 
-// ─── Validation Schema ──────────────────────────────────────────────────────
-const phoneSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .min(1, 'شماره موبایل الزامی است')
-    .regex(/^09\d{9}$/, 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد'),
-});
+// ─── Validation Schema Factory ──────────────────────────────────
+const createPhoneSchema = (t: (key: string) => string) =>
+  z.object({
+    phone: z.preprocess(
+      (val) => (typeof val === 'string' ? toEnglishDigits(val) : val),
+      z
+        .string()
+        .trim()
+        .min(1, t('identifierRequired'))
+        .regex(/^09\d{9}$/, t('identifierInvalid'))
+    ),
+  });
 
-type PhoneFormValues = z.infer<typeof phoneSchema>;
+type PhoneFormValues = z.infer<ReturnType<typeof createPhoneSchema>>;
 
-// ─── Props ──────────────────────────────────────────────────────────────────
+// ─── Props ──────────────────────────────────────────────────────
 interface PhoneFormProps {
+  /**
+   * Purpose of the OTP request. Determines which flow
+   * the user is entering (registration vs password reset).
+   */
+  purpose?: OTPPurpose;
   onSuccess?: (phone: string) => void | Promise<void>;
-  onError?: (error: Error) => void;
+  onError?: (errorCode: string) => void;
 }
 
-// ─── Main Component ────────────────────────────────────────────────────────
-export function PhoneForm({ onSuccess, onError }: PhoneFormProps) {
+// ─── Component ──────────────────────────────────────────────────
+export function PhoneForm({
+  purpose = 'registration',
+  onSuccess,
+  onError,
+}: PhoneFormProps) {
   const [errorMessage, setErrorMessage] = useState('');
+  const t = useTranslations('Auth.phone');
 
-  // ✅ استفاده از usePhone هوک
   const { requestOTP } = usePhone({
-    onSuccess,
-    onError,
+    onError: (code) => {
+      const errorKeyMap: Record<string, string> = {
+        VALIDATION_FAILED: 'errors.validationFailed',
+      };
+      const translationKey = errorKeyMap[code];
+      setErrorMessage(translationKey ? t(translationKey) : code);
+      onError?.(code);
+    },
   });
 
   const {
@@ -56,43 +77,38 @@ export function PhoneForm({ onSuccess, onError }: PhoneFormProps) {
     formState: { errors, isSubmitting },
     reset,
   } = useForm<PhoneFormValues>({
-    resolver: zodResolver(phoneSchema),
+    resolver: zodResolver(createPhoneSchema(t)),
     defaultValues: {
       phone: '',
     },
   });
 
-  // ─── Handle Submit ──────────────────────────────────────────────────────
   const onSubmit = async (data: PhoneFormValues) => {
     setErrorMessage('');
 
-    const result = await requestOTP(data.phone);
+    const result = await requestOTP(data.phone, 'phone', purpose);
 
-    if (!result.success) {
-      setErrorMessage(result.error || 'خطا در ارسال کد تأیید');
-      // Reset phone field for retry
+    if (result.success) {
+      if (onSuccess) await onSuccess(data.phone);
+    } else {
       reset({ phone: '' });
     }
   };
 
-  // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <Card className="w-full max-w-sm sm:max-w-md">
       <CardHeader className="text-center">
         <div className="mx-auto w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg mb-4">
           <Phone className="w-7 h-7 text-primary-foreground" />
         </div>
-        <CardTitle className="text-2xl font-bold">ورود به حساب کاربری</CardTitle>
-        <CardDescription>
-          شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود
-        </CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('title')}</CardTitle>
+        <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <CardContent className="flex flex-col gap-5">
-          {/* Phone Field */}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="phone">شماره موبایل</Label>
+            <Label htmlFor="phone">{t('identifier')}</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -101,7 +117,7 @@ export function PhoneForm({ onSuccess, onError }: PhoneFormProps) {
                 inputMode="numeric"
                 autoComplete="tel"
                 autoFocus
-                placeholder="09123456789"
+                placeholder={t('identifierPlaceholder')}
                 className="pl-10 text-left"
                 aria-invalid={!!errors.phone}
                 disabled={isSubmitting}
@@ -115,7 +131,6 @@ export function PhoneForm({ onSuccess, onError }: PhoneFormProps) {
             </div>
           </div>
 
-          {/* Error Message */}
           {errorMessage && (
             <div
               className="p-3 rounded-lg bg-destructive/10 border border-destructive/20"
@@ -129,29 +144,27 @@ export function PhoneForm({ onSuccess, onError }: PhoneFormProps) {
         </CardContent>
 
         <CardFooter className="flex flex-col gap-4">
-          {/* Submit Button */}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                در حال ارسال...
+                {t('submitting')}
               </>
             ) : (
               <>
                 <Send className="w-4 h-4 ml-2" />
-                ارسال کد تأیید
+                {t('submit')}
               </>
             )}
           </Button>
 
-          {/* Back to Login Link */}
           <p className="text-sm text-muted-foreground text-center">
-            قبلاً ثبت‌نام کرده‌اید؟{' '}
+            {t('alreadyRegistered')}{' '}
             <Link
               href={ROUTES.LOGIN}
               className="text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-2"
             >
-              وارد شوید
+              {t('login')}
             </Link>
           </p>
         </CardFooter>

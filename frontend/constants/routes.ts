@@ -4,7 +4,8 @@ export const ROUTES = {
   LOGIN: '/auth/login',
   REGISTER: '/auth/register',
   OTP: '/auth/otp',
-  PHONE: '/auth/phone',
+  COMPLETE_REGISTRATION: '/auth/complete-registration',
+  RESET_PASSWORD: '/auth/reset-password',
 
   // Protected routes
   DASHBOARD: '/dashboard',
@@ -15,7 +16,7 @@ export const ROUTES = {
   SETTINGS_SESSIONS: '/settings/sessions',
   ADMIN_USERS: '/admin/users',
   ADMIN_SETTINGS: '/admin/settings',
-  
+
   // Error paths
   NOT_FOUND: '/404',
   FORBIDDEN: '/403',
@@ -29,7 +30,8 @@ export const PUBLIC_ROUTES: AppRoute[] = [
   ROUTES.LOGIN,
   ROUTES.REGISTER,
   ROUTES.OTP,
-  ROUTES.PHONE,
+  ROUTES.COMPLETE_REGISTRATION,
+  ROUTES.RESET_PASSWORD,
 ];
 
 // Protected routes (require login)
@@ -40,13 +42,13 @@ export const PROTECTED_ROUTES: AppRoute[] = [
   ROUTES.SETTINGS,
   ROUTES.SETTINGS_PASSWORD,
   ROUTES.SETTINGS_SESSIONS,
-  ROUTES.ADMIN_USERS,     
-  ROUTES.ADMIN_SETTINGS, 
+  ROUTES.ADMIN_USERS,
+  ROUTES.ADMIN_SETTINGS,
 ];
 
 // Admin-only routes
 export const ADMIN_ROUTES: AppRoute[] = [
   ROUTES.DASHBOARD_ADMIN,
-  ROUTES.ADMIN_USERS,     
-  ROUTES.ADMIN_SETTINGS, 
+  ROUTES.ADMIN_USERS,
+  ROUTES.ADMIN_SETTINGS,
 ];

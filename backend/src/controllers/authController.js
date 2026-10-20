@@ -1,361 +1,581 @@
-import User from "../models/User.js";
-import { sendOTP } from "../services/otp.service.js";
-import { generateToken } from "../services/token.service.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import RefreshToken from "../models/RefreshToken.js";
-import { hashToken } from "../utils/hashToken.js";
+import { registerPersonalAccount } from "../services/authentication/registration.service.js";
 
+import {
+  changeAccountPassword,
+  comparePassword,
+  findAccountById,
+  findAccountForLogin,
+  findPersonalAccount,
+  requireActiveAccount,
+  setAccountPassword,
+  updateLastLogin,
+} from "../services/authentication/account.service.js";
+
+import { sendOTP, verifyOTP } from "../services/authentication/otp.service.js";
+
+import {
+  generateAccessToken,
+  verifyVerificationToken,
+} from "../services/authentication/token.service.js";
+
+import {
+  createRefreshToken,
+  getActiveSessions,
+  getSessionHistory,
+  revokeAllRefreshTokens,
+  revokeRefreshToken,
+  revokeSessionById,
+  rotateRefreshToken,
+  validateRefreshToken,
+} from "../services/authentication/refreshToken.service.js";
+
+import { serializeAccount } from "../utils/serializers/account.serializer.js";
+
+import {
+  clearRefreshTokenCookie,
+  setRefreshTokenCookie,
+} from "../utils/cookie.js";
+
+import { AppError } from "../errors/AppError.js";
+import { authErrors } from "../errors/authErrors.js";
+
+/*
+ * --------------------------------------------------------------------------
+ * HTTP helpers
+ * --------------------------------------------------------------------------
+ */
+
+/**
+ * Return the first non-empty value from the provided values.
+ *
+ * This is intentionally kept at the HTTP layer.
+ * Business validation belongs to the underlying services.
+ */
+const getString = (...values) => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Extract user-agent from the HTTP request.
+ */
+const getUserAgent = (req) => req.headers?.["user-agent"] ?? null;
+
+/**
+ * Extract client IP from the HTTP request.
+ *
+ * req.ip is preferred because Express may already
+ * normalize the address according to proxy configuration.
+ */
+const getClientIp = (req) => req.ip ?? null;
+
+/**
+ * Return a consistent JSON success response.
+ */
+const success = (res, data = {}, status = 200) => {
+  return res.status(status).json({
+    success: true,
+    ...data,
+  });
+};
+
+/**
+ * Return a consistent JSON error response.
+ */
+const failure = (res, status, message) => {
+  return res.status(status).json({
+    success: false,
+    message,
+  });
+};
+
+const handleError = (res, error) => {
+  // Handle AppError instances (services throw these)
+  if (error instanceof AppError) {
+    return res.status(error.status).json({
+      success: false,
+      code: error.code,
+      message: error.message,
+    });
+  }
+
+    console.error('[handleError] unexpected error:', error);
+
+  // Unknown errors → generic 500
+  return res.status(500).json({
+    success: false,
+    code: "INTERNAL_SERVER_ERROR",
+    message: "Internal server error",
+  });
+};
+
+/*
+ * --------------------------------------------------------------------------
+ * Registration
+ * --------------------------------------------------------------------------
+ */
+
+/**
+ * Request an OTP for Personal Account registration.
+ *
+ * Business rules are delegated to otp.service.js.
+ */
 export const requestOTP = async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { identifier, identifierType, purpose = "registration" } = req.body;
 
-    if (!phone) {
-      return res.status(400).json({ success: false, message: "Phone number is required" });
-    }
+    const result = await sendOTP({
+      identifier,
+      identifierType,
+      purpose,
+    });
 
-    await sendOTP(phone);
-
-    res.status(200).json({ success: true, message: "OTP send successfully" });
-
+    return success(res, {
+      data: result,
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Failed to send OTP" });
+    return handleError(res, error);
+  }
+};
+/**
+ * Verify a registration OTP.
+ *
+ * otp.service.js is responsible for OTP validation,
+ * expiration, attempt limits and token generation.
+ */
+export const verifyOTPController = async (req, res) => {
+  try {
+    const {
+      identifier,
+      identifierType,
+      purpose = "registration",
+      otp,
+    } = req.body;
+
+    const result = await verifyOTP({
+      identifier,
+      identifierType,
+      purpose,
+      otp,
+    });
+
+    return success(res, {
+      data: result,
+    });
+  } catch (error) {
+    return handleError(res, error);
   }
 };
 
-export const verifyOTP = async (req, res) => {
+/**
+ * Complete Personal Account registration.
+ *
+ * The verification token is the source of truth for
+ * the verified identifier.
+ */
+export const register = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
-    const user = await User.findOne({ phone });
+    const { verificationToken, firstName, lastName, password } = req.body;
 
-    if (!user || !user.otpHash || !user.otpExpire) {
-      return res.status(400).json({ success: false, message: "Invalid or expired request" });
-    }
-
-    // check the expiration time
-    if (Date.now() > user.otpExpire) {
-      return res.status(400).json({ success: false, message: "OTP expired" });
-    }
-
-    const isValid = await bcrypt.compare(otp.toString(), user.otpHash);
-
-    if (!isValid) {
-      return res.status(400).json({ success: false, message: "invalid otp" });
-    }
-
-    // OTP is consumed
-    user.otpHash = null;
-    user.otpExpire = null;
-    user.isVerified = true;
-
-    await user.save();
-
-    const resetToken = generateToken(
-      { sub: user._id, type: "password_reset" },
-      "10m"
+    const verification = verifyVerificationToken(
+      verificationToken,
+      "registration",
     );
 
-    res.status(200).json({ success: true, resetToken, user: { id: user._id, phone: user.phone } });
+    const result = await registerPersonalAccount({
+      firstName,
+      lastName,
+      identifier: verification.identifier,
+      identifierType: verification.identifierType,
+      password,
+    });
 
+    return success(
+      res,
+      {
+        data: {
+          user: result.user,
+          account: serializeAccount(result.account),
+        },
+      },
+      201,
+    );
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "otp verification failed" });
+    return handleError(res, error);
   }
 };
 
+/*
+ * --------------------------------------------------------------------------
+ * Login
+ * --------------------------------------------------------------------------
+ */
+
+/**
+ * Login using an account identifier and password.
+ */
 export const loginWithPassword = async (req, res) => {
   try {
-    const { phone, password } = req.body;
-    const user = await User.findOne({ phone }).select("+password");
+    const {
+      identifier,
+      identifierType,
+      accountType = "personal",
+      password,
+    } = req.body;
 
-    if (!user || !user.password) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-    }
-
-    if (user.status !== "active") {
-      return res.status(403).json({ success: false, message: "Account is not active" });
-    }
-
-    const sessions = await RefreshToken.countDocuments({ user: user._id });
-    
-    if (sessions >= 5) {
-      await RefreshToken.findOneAndDelete({ user: user._id }).sort({ createdAt: 1 });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-    }
-
-    user.lastLogin = new Date();
-    await user.save();
-
-    const accessToken = generateToken(
-      { sub: user._id, type: "access", role: user.role },
-      "15m"
-    );
-
-    const refreshToken = generateToken(
-      { sub: user._id, type: "refresh", role: user.role },
-      "7d"
-    );
-
-    await RefreshToken.create({
-      user: user._id,
-      token: hashToken(refreshToken),
-      userAgent: req.headers["user-agent"],
-      ip: req.ip,
-      lastUsedAt: new Date()
+    const account = await findAccountForLogin({
+      identifier,
+      identifierType,
+      accountType,
     });
 
-    // Set cookie for user role
-     res.cookie('userRole', user.role, {
-      httpOnly: true,  // Only the server can read it (high security)
-      secure: process.env.NODE_ENV === 'production',  // HTTPS only
-      sameSite: 'lax',  // CSRF protection
-      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+    if (!account) {
+      throw authErrors.invalidCredentials();
+    }
+
+    requireActiveAccount(account);
+
+    const passwordValid = await comparePassword(password, account.passwordHash);
+
+    if (!passwordValid) {
+      throw authErrors.invalidCredentials();
+    }
+
+    const accessToken = generateAccessToken(account._id, accountType);
+
+    const { refreshToken, session } = await createRefreshToken({
+      accountId: account._id,
+      accountType,
+      userAgent: getUserAgent(req),
+      ip: getClientIp(req),
     });
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 15 * 60 * 1000  
+    setRefreshTokenCookie(res, refreshToken);
+
+    await updateLastLogin({
+      accountId: account._id,
+      accountType,
     });
 
-    return res.status(200).json({ success: true,  accessToken, refreshToken, 
-      user: { 
-          id: user._id, 
-          phone: user.phone, 
-          role: user.role, 
-          status: user.status 
-      } 
-  });
-
+    return success(res, {
+      data: {
+        accessToken,
+        refreshToken,
+        session,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "login failed" });
+    return handleError(res, error);
   }
 };
 
+/*
+ * --------------------------------------------------------------------------
+ * Password
+ * --------------------------------------------------------------------------
+ */
+
+/**
+ * Set/reset a Personal Account password using
+ * a password-reset verification token.
+ */
 export const setPassword = async (req, res) => {
   try {
+    const { verificationToken, password } = req.body;
 
-    if (req.tokenType !== "password_reset") {
-      return res.status(403).json({ success: false, message: "Invalid token type" });
-    }
-    const { password } = req.body;
-
-    if (!password || password.length < 6) {
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
-    }
-
-    const user = req.user;
-    user.password = await bcrypt.hash(password, 12);
-
-    await user.save();
-
-    const accessToken = generateToken(
-      { sub: user._id, type: "access", role: user.role },
-      "15m"
+    const verification = verifyVerificationToken(
+      verificationToken,
+      "password_reset",
     );
 
-    const refreshToken = generateToken(
-      { sub: user._id, type: "refresh", role: user.role },
-      "7d"
+    const account = await findPersonalAccount(
+      verification.identifierType === "phone"
+        ? { phone: verification.identifier }
+        : { email: verification.identifier },
     );
 
-    await RefreshToken.deleteMany({ user: user._id });
-    await RefreshToken.create({
-      user: user._id,
-      token: hashToken(refreshToken),
-      userAgent: req.headers["user-agent"],
-      ip: req.ip,
-      lastUsedAt: new Date()
+    if (!account) {
+      throw authErrors.accountNotFound();
+    }
+
+    await setAccountPassword({
+      accountId: account._id,
+      accountType: "personal",
+      password,
     });
 
-     // Cookie Settings
-    res.cookie('userRole', user.role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+    /*
+     * Password change invalidates every existing
+     * refresh-token session for this account.
+     */
+    const revokedSessions = await revokeAllRefreshTokens({
+      accountId: account._id,
+      accountType: "personal",
     });
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 15 * 60 * 1000
+    return success(res, {
+      data: {
+        revokedSessions,
+      },
     });
-    
-    res.status(200).json({ success: true, accessToken, refreshToken, 
-      user: { id: user._id, phone: user.phone, role: user.role, status: user.status },
-      message: "Password updated successfully" 
-  });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "failed to set password" });
+    return handleError(res, error);
   }
-
 };
 
+/**
+ * Change the password of the currently authenticated account.
+ *
+ * Requires:
+ *   - A valid access token (via authenticateAccessToken middleware).
+ *   - The current password (for verification).
+ *   - The new password (must differ from current).
+ *
+ * All refresh-token sessions for this account are revoked after the
+ * change, forcing the user to log in again on every device with the
+ * new password. This is the standard security practice.
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const { accountId, accountType } = req.auth;
+
+    await changeAccountPassword({
+      accountId,
+      accountType,
+      currentPassword,
+      newPassword,
+    });
+
+    // Revoke every session so any device currently logged in is kicked out
+    const revokedSessions = await revokeAllRefreshTokens({
+      accountId,
+      accountType,
+    });
+
+    return success(res, {
+      data: { success: true, revokedSessions },
+    });
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+/*
+ * --------------------------------------------------------------------------
+ * Refresh
+ * --------------------------------------------------------------------------
+ */
+
+/**
+ * Exchange a valid refresh token for a new
+ * access token and rotated refresh token.
+ */
 export const refreshAccessToken = async (req, res) => {
   try {
-
-    const { refreshToken } = req.body;
+    const refreshToken = getString(
+      req.body?.refreshToken,
+      req.cookies?.refreshToken,
+    );
 
     if (!refreshToken) {
-      return res.status(400).json({ success: false, message: "Refresh token required" });
+      throw authErrors.refreshTokenRequired();
     }
 
-    let payload;
+    const { payload } = await validateRefreshToken(refreshToken);
 
-    try {
-      payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
-    } catch {
-      return res.status(401).json({ success: false, message: "Invalid refresh token" });
-    }
-
-    if (payload.type !== "refresh") {
-      return res.status(403).json({ success: false, message: "Invalid token type" });
-    }
-
-    const storedToken = await RefreshToken.findOne({
-      token: hashToken(refreshToken),
-      user: payload.sub
+    const account = await findAccountById({
+      accountId: payload.sub,
+      accountType: payload.accountType,
     });
 
-    if (!storedToken) {
-      return res.status(401).json({ success: false, message: "Refresh token revoked" });
-    }
+    requireActiveAccount(account);
 
-    const user = await User.findById(payload.sub);
-
-    if (!user || user.status !== "active") {
-      return res.status(403).json({ success: false, message: "Account not active" });
-    }
-
-    const newAccessToken = generateToken(
-      { sub: user._id, type: "access", role: user.role },
-      "15m"
+    const { refreshToken: newRefreshToken, session } = await rotateRefreshToken(
+      {
+        refreshToken,
+        userAgent: getUserAgent(req),
+        ip: getClientIp(req),
+      },
     );
 
-    const newRefreshToken = generateToken(
-      { sub: user._id, type: "refresh", role: user.role },
-      "7d"
-    );
+    setRefreshTokenCookie(res, newRefreshToken);
 
-    storedToken.lastUsedAt = new Date();
-    await storedToken.deleteOne();
+    const accessToken = generateAccessToken(payload.sub, payload.accountType);
 
-    await RefreshToken.create({
-      user: user._id,
-      token: hashToken(newRefreshToken),
-      userAgent: req.headers["user-agent"],
-      ip: req.ip,
-      lastUsedAt: new Date()
+    return success(res, {
+      data: {
+        accessToken,
+        refreshToken: newRefreshToken,
+        session,
+      },
     });
-
-
-    res.json({ success: true, accessToken: newAccessToken, refreshToken: newRefreshToken });
-
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Server error" });
+    return handleError(res, error);
   }
 };
 
+/*
+ * --------------------------------------------------------------------------
+ * Logout
+ * --------------------------------------------------------------------------
+ */
+
+/**
+ * Logout the current session.
+ */
 export const logout = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = getString(
+      req.body?.refreshToken,
+      req.cookies?.refreshToken,
+    );
 
     if (!refreshToken) {
-      return res.status(400).json({ success: false, message: "Refresh token required" });
+      throw authErrors.refreshTokenRequired();
     }
 
-    const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    await revokeRefreshToken(refreshToken);
 
-    await RefreshToken.deleteOne({ token: hashToken(refreshToken), user: payload.sub });
+    res.clearCookie("accessToken");
 
-    // Clear cookies
-    res.clearCookie('userRole');
-    res.clearCookie('accessToken');
+    clearRefreshTokenCookie(res);
 
-    res.json({ success: true, message: "Logged out" });
-
+    return success(res);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Logout failed" });
+    return handleError(res, error);
   }
 };
 
+/*
+ * --------------------------------------------------------------------------
+ * Sessions
+ * --------------------------------------------------------------------------
+ */
+
+/**
+ * Return all active sessions for the authenticated account.
+ */
 export const getSessions = async (req, res) => {
-
-  const sessions = await RefreshToken.find({ user: req.user._id })
-    .select("-token");
-
-  res.json({ success: true,sessions});
-
-};
-
-export const revokeSession = async (req, res) => {
-
-  await RefreshToken.deleteOne({
-    _id: req.params.id,
-    user: req.user._id
-  });
-
-  res.json({ success: true });
-
-};
-
-// Resend OTP
-export const resendOTP = async (req, res) => {
   try {
-    const { phone } = req.body;
-
-    if (!phone) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "شماره موبایل الزامی است" 
-      });
+    if (!req.auth?.accountId) {
+      throw authErrors.authenticationRequired();
     }
 
-    // Check for user existence
-    const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "کاربری با این شماره یافت نشد" 
-      });
-    }
-
-    // Check user status
-    if (user.status !== 'active') {
-      return res.status(403).json({ 
-        success: false, 
-        message: "حساب کاربری شما فعال نیست" 
-      });
-    }
-
-    // Send a new OTP (same as the sendOTP function)
-    await sendOTP(phone);
-
-    // Log for review (optional)
-    console.log(`OTP resent to ${phone} at ${new Date().toISOString()}`);
-
-    res.status(200).json({ 
-      success: true, 
-      message: "کد تأیید مجدداً ارسال شد" 
+    const sessions = await getActiveSessions({
+      accountId: req.auth.accountId,
+      accountType: req.auth.accountType,
     });
 
+    return success(res, {
+      data: {
+        sessions,
+      },
+    });
   } catch (error) {
-    console.error('Error in resendOTP:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: "خطا در ارسال مجدد کد تأیید" 
+    return handleError(res, error);
+  }
+};
+
+/**
+ * Return session history for the authenticated account.
+ */
+export const getSessionHistoryController = async (req, res) => {
+  try {
+    if (!req.auth?.accountId) {
+      throw authErrors.authenticationRequired();
+    }
+
+    const sessions = await getSessionHistory({
+      accountId: req.auth.accountId,
+      accountType: req.auth.accountType,
     });
+
+    return success(res, {
+      data: {
+        sessions,
+      },
+    });
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+
+/**
+ * Revoke one session using its refresh token.
+ *
+ * The service owns the actual revocation logic.
+ */
+export const revokeSession = async (req, res) => {
+  try {
+    const refreshToken = getString(req.body?.refreshToken);
+
+    if (!refreshToken) {
+      throw authErrors.refreshTokenRequired();
+    }
+
+    const revoked = await revokeRefreshToken(refreshToken);
+
+    if (!revoked) {
+      throw authErrors.sessionNotFound();
+    }
+
+    return success(res);
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+
+/**
+ * Revoke a specific session by its ID.
+ *
+ * The session must belong to the currently authenticated account.
+ * Input validation (ObjectId format) is handled by validateParams
+ * middleware at the route level — this controller stays clean.
+ */
+export const revokeSessionByIdController = async (req, res) => {
+  try {
+    const { id: sessionId } = req.params;
+    const { accountId, accountType } = req.auth;
+
+    const revoked = await revokeSessionById({
+      sessionId,
+      accountId,
+      accountType,
+    });
+
+    return success(res, {
+      data: { revoked },
+    });
+  } catch (error) {
+    return handleError(res, error);
+  }
+};
+
+/**
+ * Revoke all active sessions for the authenticated account.
+ */
+export const revokeAllSessions = async (req, res) => {
+  try {
+    if (!req.auth?.accountId) {
+      throw authErrors.authenticationRequired();
+    }
+
+    const revokedSessions = await revokeAllRefreshTokens({
+      accountId: req.auth.accountId,
+      accountType: req.auth.accountType,
+    });
+
+    return success(res, {
+      data: {
+        revokedSessions,
+      },
+    });
+  } catch (error) {
+    return handleError(res, error);
   }
 };

@@ -1,5 +1,5 @@
 export interface HeroStats {
-  complexesCount: string;   
+  complexesCount: string;
   activeAthletes: string;
   proCoaches: string;
 }

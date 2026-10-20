@@ -2,7 +2,7 @@ import express from "express";
 import {
   createReview,
   getServiceReviews,
-  deleteReview
+  deleteReview,
 } from "../controllers/reviewController.js";
 
 import { protect } from "../middleware/authMiddleware.js";

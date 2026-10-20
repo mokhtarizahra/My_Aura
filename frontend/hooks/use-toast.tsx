@@ -1,6 +1,7 @@
 'use client';
 
 import { toast as hotToast } from 'react-hot-toast';
+
 import { cn } from '@/lib/utils';
 
 interface ToastProps {

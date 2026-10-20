@@ -1,75 +1,82 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { Session } from '@/types/auth';
+
 import { storage } from './storage';
+
+const mockSession: Session = {
+  _id: 'session-1',
+  accountId: 'account-1',
+  accountType: 'personal',
+  userAgent: 'Mozilla/5.0',
+  ip: '127.0.0.1',
+  expiresAt: '2026-12-31T00:00:00.000Z',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
 
 describe('storage utility', () => {
   beforeEach(() => {
     sessionStorage.clear();
   });
 
-  describe('getUser', () => {
-    it('should return null when no user is stored', () => {
-      // Arrange No data has been saved.
-
-      // Act
-      const result = storage.getUser();
-
-      // Assert
+  describe('getSession', () => {
+    it('should return null when no session is stored', () => {
+      const result = storage.getSession();
       expect(result).toBeNull();
     });
 
-    it('should return user when stored', () => {
-      // Arrange
-      const mockUser = { id: '1', name: 'علی', role: 'admin' };
-      sessionStorage.setItem('user', JSON.stringify(mockUser));
+    it('should return session when stored', () => {
+      sessionStorage.setItem('session', JSON.stringify(mockSession));
 
-      // Act
-      const result = storage.getUser();
+      const result = storage.getSession();
 
-      // Assert
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockSession);
     });
 
     it('should return null when stored data is invalid JSON', () => {
-      // Arrange
-      sessionStorage.setItem('user', 'invalid-json{{{');
+      sessionStorage.setItem('session', 'invalid-json{{{');
 
-      // Act
-      const result = storage.getUser();
+      const result = storage.getSession();
 
-      // Assert
       expect(result).toBeNull();
     });
   });
 
-  describe('setUser', () => {
-    it('should store user in sessionStorage', () => {
-      // Arrange
-      const mockUser = { id: '1', name: 'علی', role: 'user' };
+  describe('setSession', () => {
+    it('should store session in sessionStorage', () => {
+      storage.setSession(mockSession);
 
-      // Act
-      storage.setUser(mockUser);
+      const stored = sessionStorage.getItem('session');
+      expect(JSON.parse(stored!)).toEqual(mockSession);
+    });
+  });
 
-      // Assert
-      const stored = sessionStorage.getItem('user');
-      expect(JSON.parse(stored!)).toEqual(mockUser);
+  describe('getAccountType', () => {
+    it('should return accountType from stored session', () => {
+      storage.setSession(mockSession);
+
+      const result = storage.getAccountType();
+
+      expect(result).toBe('personal');
+    });
+
+    it('should return null when no session is stored', () => {
+      const result = storage.getAccountType();
+
+      expect(result).toBeNull();
     });
   });
 
   describe('clear', () => {
     it('should remove all auth data from storage', () => {
-      // Arrange
-      storage.setUser({ id: '1', name: 'علی', role: 'user' });
+      storage.setSession(mockSession);
       storage.setAccessToken('token123');
-      storage.setRefreshToken('refresh456');
 
-      // Act
       storage.clear();
 
-      // Assert
-      expect(sessionStorage.getItem('user')).toBeNull();
+      expect(sessionStorage.getItem('session')).toBeNull();
       expect(sessionStorage.getItem('accessToken')).toBeNull();
-      expect(sessionStorage.getItem('refreshToken')).toBeNull();
     });
   });
 });

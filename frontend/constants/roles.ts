@@ -1,29 +1,23 @@
-import { UserRole } from '../types/auth';
+import { AccountType } from '../types/auth';
 import { ROUTES } from './routes';
 
-export const ROLES = {
-  ATHLETE: 'athlete' as const,
-  SPORTS_COMPLEX_ADMIN: 'sportsComplex_admin' as const,
-  SUPER_ADMIN: 'super_admin' as const,
+/**
+ * Account types.
+ * Must match backend AccountType enum.
+ */
+export const ACCOUNT_TYPES = {
+  PERSONAL: 'personal',
+  ORGANIZATION: 'organization',
+  STAFF: 'staff',
 } as const;
 
-export const ROLE_LABELS: Record<UserRole, string> = {
-  athlete: 'ورزشکار',
-  sportsComplex_admin: 'مدیر باشگاه',
-  super_admin: 'مدیر سیستم',
-};
-
-// Using constant ROUTES instead of hardcoding
-export const ROLE_ROUTES: Record<UserRole, string> = {
-  athlete: ROUTES.HOME, // "/"
-  sportsComplex_admin: ROUTES.DASHBOARD_SELLER, // "/dashboard/seller"
-  super_admin: ROUTES.DASHBOARD_ADMIN, // "/dashboard/admin"
-};
-
-export const ROLE_HOME_ROUTES: Record<UserRole, string> = {
-  athlete: ROUTES.HOME,
-  sportsComplex_admin: ROUTES.DASHBOARD_SELLER,
-  super_admin: ROUTES.DASHBOARD_ADMIN,
+/**
+ * Route to redirect each account type after login.
+ */
+export const ACCOUNT_TYPE_ROUTES: Record<AccountType, string> = {
+  personal: ROUTES.HOME,
+  organization: ROUTES.DASHBOARD_SELLER,
+  staff: ROUTES.DASHBOARD_ADMIN,
 };
 
 export const DEFAULT_ROUTE = ROUTES.HOME;

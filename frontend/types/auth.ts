@@ -1,108 +1,186 @@
-export type UserRole = "athlete" | "sportsComplex_admin" | "super_admin";
+// ─────────────────────────────────────────────────────────────────
+// Account Types & Status
+// ─────────────────────────────────────────────────────────────────
 
-export type UserStatus = "active" | "inactive" | "suspended" | "pending_verification";
+/**
+ * Backend account type.
+ * Personal: normal user
+ * Organization: sports complex / club
+ * Staff: platform staff member
+ */
+export type AccountType = 'personal' | 'organization' | 'staff';
 
-export interface User {
-  id: string;
-  name?: string;
-  phone: string;
-  email?: string;
-  avatar?: string; // nullable
-  role: UserRole;
-  status: UserStatus;
-  isVerified: boolean;
-  clinicId?: string; // برای نقش athlete یا sportsComplex_admin
-  lastLogin?: string; // ISO date
+/**
+ * Backend account status.
+ */
+export type AccountStatus = 'pending' | 'active' | 'inactive' | 'suspended';
+
+/**
+ * Identifier types accepted by the backend.
+ */
+export type IdentifierType = 'phone' | 'email';
+
+/**
+ * OTP purposes.
+ */
+export type OTPPurpose = 'registration' | 'password_reset';
+
+// ─────────────────────────────────────────────────────────────────
+// Session
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Refresh-token session as returned by the backend.
+ *
+ * The backend stores sessions alongside refresh tokens
+ * and returns the full session object on login and registration.
+ */
+export interface Session {
+  _id: string;
+  accountId: string;
+  accountType: AccountType;
+  userAgent?: string;
+  ip?: string;
+  expiresAt: string;
+  revokedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-// ========== احراز هویت ==========
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
+// ─────────────────────────────────────────────────────────────────
+// Auth Responses
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Successful auth response (login or registration).
+ */
+export interface AuthSuccessResponse {
+  success: true;
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    session: Session;
+  };
+}
+/**
+ * Failed auth response.
+ *
+ * `code` is the translatable error code sent by the backend
+ * (e.g. INVALID_CREDENTIALS, ACCOUNT_SUSPENDED, ...).
+ */
+export interface AuthErrorResponse {
+  success: false;
+  code?: string;
+  message?: string;
 }
 
-export type AuthResponse = 
-  | {
-      success: true;
-      accessToken: string;
-      refreshToken: string;
-      user: User;
-    }
-  | {
-      success: false;
-      message: string;
-      accessToken?: never;
-      refreshToken?: never;
-      user?: never;
-    };
+export type AuthResponse = AuthSuccessResponse | AuthErrorResponse;
 
-// ========== درخواست‌ها ==========
+export interface RequestOTPResponse {
+  success: boolean;
+  identifier?: string;
+  identifierType?: IdentifierType;
+  purpose?: OTPPurpose;
+  expiresIn?: number;
+}
+
+/**
+ * Backend response for OTP verification.
+ * Contains the verification token used to prove the identifier.
+ */
+export interface VerifyOTPResponse {
+  success: boolean;
+  verificationToken: string;
+  identifier: string;
+  identifierType: IdentifierType;
+  purpose: OTPPurpose;
+}
+
+export interface SessionsResponse {
+  sessions: Session[];
+}
+
+/**
+ * Generic message response (logout, revoke, etc.).
+ */
+export interface MessageResponse {
+  success: boolean;
+  code?: string;
+  message?: string;
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  accessToken: string;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Inputs
+// ─────────────────────────────────────────────────────────────────
+
 export type RequestOTPInput = {
-  phone: string;
+  identifier: string;
+  identifierType: IdentifierType;
+  purpose?: OTPPurpose;
 };
 
 export type VerifyOTPInput = {
-  phone: string;
+  identifier: string;
+  identifierType: IdentifierType;
   otp: string;
+  purpose?: OTPPurpose;
 };
 
 export type LoginInput = {
-  phone: string;
+  identifier: string;
+  identifierType?: IdentifierType;
+  accountType?: AccountType;
   password: string;
 };
 
 export type SetPasswordInput = {
+  verificationToken: string;
   password: string;
 };
 
-// ========== پاسخ‌های خاص ==========
-export type VerifyOTPResponse = {
-  success: true;
-  resetToken: string;
-  user: { id: string; phone: string };
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
 };
 
-export type SessionsResponse = {
-  sessions: Session[];
-};
+// ─────────────────────────────────────────────────────────────────
+// Auth Context
+// ─────────────────────────────────────────────────────────────────
 
-export type MessageResponse = {
-  success: boolean;
-  message: string;
-};
-
-export type RefreshTokenResponse = {
-  success: boolean;
-  accessToken: string;
-  refreshToken: string;
-};
-
-// ========== سایر موجودیت‌ها ==========
-export interface Session {
-  _id: string;
-  user: string;
-  userAgent?: string;
-  ip?: string;
-  isValid: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// ========== Context ==========
+/**
+ * Auth context contract.
+ *
+ * The context stores the current session (not a full user object),
+ * because the backend no longer returns user data on login.
+ * User profile data must be fetched separately when needed.
+ */
 export interface AuthContextType {
-  user: User | null;
+  session: Session | null;
   accessToken: string | null;
-  refreshToken: string | null;
-  resetToken: string | null;
   isLoading: boolean;
-  requestOTP: (phone: string) => Promise<MessageResponse>;
-  verifyOTP: (phone: string, otp: string) => Promise<VerifyOTPResponse>;
-  resendOTP: (phone: string) => Promise<MessageResponse>;
-  loginWithPassword: (phone: string, password: string) => Promise<AuthResponse>;
+
+  loginWithPassword: (
+    identifier: string,
+    password: string,
+    identifierType?: IdentifierType,
+    accountType?: AccountType
+  ) => Promise<AuthResponse>;
+
+  register: (
+    verificationToken: string,
+    firstName: string,
+    lastName: string,
+    password: string
+  ) => Promise<AuthResponse>;
+
   logout: () => Promise<void>;
-  setPassword: (password: string) => Promise<void>;
+
   getSessions: () => Promise<SessionsResponse>;
-  revokeSession: (id: string) => Promise<MessageResponse>;
+  revokeSession: () => Promise<MessageResponse>;
+  revokeAllSessions: () => Promise<MessageResponse>;
 }

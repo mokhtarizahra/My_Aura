@@ -1,8 +1,12 @@
 import express from "express";
-import {sendMatchRequest , respondToMatchRequest,
-        getReceivedRequests , getSentRequests,
-        cancelMatchReuest } from "../controllers/matchController.js";
-import {protect} from "../middleware/authMiddleware.js";
+import {
+  sendMatchRequest,
+  respondToMatchRequest,
+  getReceivedRequests,
+  getSentRequests,
+  cancelMatchReuest,
+} from "../controllers/matchController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -10,15 +14,15 @@ const router = express.Router();
 router.post("/request", protect, sendMatchRequest);
 
 // reply request
-router.put("/respond", protect , respondToMatchRequest);
+router.put("/respond", protect, respondToMatchRequest);
 
 // get Received request
-router.get("/received", protect , getReceivedRequests);
+router.get("/received", protect, getReceivedRequests);
 
 // get Send request
-router.get("/sent", protect , getSentRequests);
+router.get("/sent", protect, getSentRequests);
 
-// cancel request 
-router.delete("/request/:requestId", protect , cancelMatchReuest);
+// cancel request
+router.delete("/request/:requestId", protect, cancelMatchReuest);
 
 export default router;

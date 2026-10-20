@@ -1,0 +1,227 @@
+{
+  "Common": {
+    "appName": "My Aura",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "unknownError": "An unknown error occurred"
+  },
+
+  "Validation": {
+    "VALIDATION_FAILED": "Validation failed",
+    "IDENTIFIER_REQUIRED": "Identifier is required",
+    "IDENTIFIER_EMPTY": "Identifier cannot be empty",
+    "IDENTIFIER_TYPE_INVALID": "Invalid identifier type",
+    "ACCOUNT_TYPE_INVALID": "Invalid account type",
+    "PASSWORD_REQUIRED": "Password is required",
+    "PASSWORD_EMPTY": "Password cannot be empty",
+    "PASSWORD_TOO_LONG": "Password is too long"
+  },
+
+  "AccountType": {
+  "personal": "Regular User",
+  "organization": "Organization",
+  "staff": "Staff"
+},
+
+  "Auth": {
+    "login": {
+  "title": "Welcome",
+  "description": "Sign in to your account to continue",
+  "identifier": "Phone number",
+  "identifierPlaceholder": "09123456789",
+  "identifierRequired": "Phone number is required",
+  "identifierInvalid": "Please enter a valid Iranian phone number",
+  "password": "Password",
+  "passwordPlaceholder": "••••••••",
+  "passwordRequired": "Password is required",
+  "passwordMin": "Password must be at least 6 characters",
+  "submit": "Sign in",
+  "submitting": "Signing in…",
+  "noAccount": "Don't have an account?",
+  "register": "Register",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "errors": {
+    "invalidCredentials": "Invalid phone number or password",
+    "accountNotActive": "Your account has not been activated yet",
+    "loginFailed": "Login failed",
+    "validationFailed": "Invalid input data",
+    "generic": "Something went wrong. Please try again."
+  }
+},
+"phone": {
+  "title": "Sign in to your account",
+  "description": "Enter your phone number to receive a verification code",
+  "identifier": "Phone number",
+  "identifierPlaceholder": "09123456789",
+  "identifierRequired": "Phone number is required",
+  "identifierInvalid": "Phone number must start with 09 and be 11 digits",
+  "submit": "Send verification code",
+  "submitting": "Sending...",
+  "alreadyRegistered": "Already registered?",
+  "login": "Sign in",
+  "errors": {
+    "validationFailed": "Invalid input data",
+    "sendFailed": "Failed to send verification code"
+  },
+  "toast": {
+  "successTitle": "Code sent",
+  "successDescription": "A verification code has been sent to your phone number.",
+  "errorTitle": "Error"
+}
+},
+    "register": {
+      "title": "Register",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "password": "Password",
+      "submit": "Register"
+    },
+    "otp": {
+  "title": "Sign in with one-time code",
+  "description": "Enter the 4-digit verification code that was sent",
+  "codeSentTo": "Code was sent to:",
+  "code": "Verification code",
+  "codePlaceholder": "e.g., 1234",
+  "codeLength": "Code must be exactly 4 digits",
+  "codeNumeric": "Code must contain only numbers",
+  "verify": "Verify code",
+  "verifying": "Verifying...",
+  "noCode": "Didn't receive the code?",
+  "resend": "Resend",
+  "resending": "Resending...",
+  "alreadyRegistered": "Already registered?",
+  "login": "Sign in",
+  "errors": {
+    "validationFailed": "Invalid input data",
+    "verifyFailed": "Failed to verify code",
+    "resendFailed": "Failed to resend code"
+  },
+  "toast": {
+  "successTitle": "Verified",
+  "successDescription": "The one-time code was successfully verified.",
+  "errorTitle": "Verification failed"
+}
+},
+"completeRegistration": {
+  "title": "Complete Registration",
+  "description": "Enter the following information to create your account",
+  "firstName": "First name",
+  "firstNamePlaceholder": "Enter your first name",
+  "firstNameRequired": "First name is required",
+  "firstNameMin": "First name must be at least 2 characters",
+  "lastName": "Last name",
+  "lastNamePlaceholder": "Enter your last name",
+  "lastNameRequired": "Last name is required",
+  "lastNameMin": "Last name must be at least 2 characters",
+  "password": "Password",
+  "passwordPlaceholder": "••••••••",
+  "passwordRequired": "Password is required",
+  "passwordMin": "Password must be at least 8 characters",
+  "passwordWeak": "Password must contain letters and numbers",
+  "confirmPassword": "Confirm password",
+  "confirmPasswordPlaceholder": "••••••••",
+  "confirmPasswordRequired": "Confirm password is required",
+  "confirmPasswordMismatch": "Passwords do not match",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "submit": "Create account",
+  "submitting": "Creating account...",
+  "hasAccount": "Already have an account?",
+  "login": "Sign in",
+  "errors": {
+    "validationFailed": "Invalid input data",
+    "registrationFailed": "Registration failed"
+  }
+},
+"resetPassword": {
+  "title": "Set new password",
+  "description": "Enter your new password",
+  "password": "New password",
+  "passwordPlaceholder": "••••••••",
+  "passwordRequired": "Password is required",
+  "passwordMin": "Password must be at least 8 characters",
+  "passwordWeak": "Password must contain letters and numbers",
+  "confirmPassword": "Confirm new password",
+  "confirmPasswordPlaceholder": "••••••••",
+  "confirmPasswordRequired": "Confirm password is required",
+  "confirmPasswordMismatch": "Passwords do not match",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "submit": "Change password",
+  "submitting": "Changing...",
+  "backToLogin": "Back to sign in",
+  "errors": {
+    "validationFailed": "Invalid input data",
+    "resetFailed": "Password reset failed",
+    "passwordSameAsOld": "New password must be different from the current one"
+  }
+},
+"changePassword": {
+  "title": "Change Password",
+  "description": "For your account security, enter your current and new password",
+  "currentPassword": "Current password",
+  "currentPasswordPlaceholder": "••••••••",
+  "currentPasswordRequired": "Current password is required",
+  "newPassword": "New password",
+  "newPasswordPlaceholder": "••••••••",
+  "newPasswordRequired": "New password is required",
+  "newPasswordMin": "New password must be at least 8 characters",
+  "newPasswordWeak": "Password must contain letters and numbers",
+  "confirmPassword": "Confirm new password",
+  "confirmPasswordPlaceholder": "••••••••",
+  "confirmPasswordRequired": "Confirm password is required",
+  "confirmPasswordMismatch": "Passwords do not match",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "submit": "Save new password",
+  "submitting": "Saving...",
+  "backToDashboard": "Back to dashboard",
+  "errors": {
+    "invalidCurrentPassword": "Current password is incorrect",
+    "passwordSameAsOld": "New password must be different from current",
+    "changeFailed": "Failed to change password",
+    "validationFailed": "Invalid input data"
+  }
+},
+"sessions": {
+  "title": "Active Devices",
+  "description": "All devices currently signed in to your account",
+  "loading": "Loading sessions...",
+  "empty": "No active devices found",
+  "errors": {
+    "fetchFailed": "Failed to load sessions",
+    "revokeFailed": "Failed to revoke session",
+    "sessionNotFound": "Session not found"
+  },
+  "device": {
+    "mobile": "Mobile",
+    "tablet": "Tablet",
+    "desktop": "Desktop"
+  },
+  "browser": {
+    "chrome": "Chrome",
+    "firefox": "Firefox",
+    "safari": "Safari",
+    "edge": "Edge",
+    "unknown": "Unknown browser"
+  },
+  "ip": "IP",
+  "createdAt": "Signed in",
+  "revoke": "Sign out this device",
+  "revoking": "Signing out...",
+  "revokeAll": "Sign out of all devices",
+  "revokingAll": "Signing out of all...",
+  "backToDashboard": "Back to dashboard"
+},
+"redirect": {
+  "errorTitle": "Error",
+  "invalidAccountType": "You don't have permission to access this page."
+}
+  }
+}

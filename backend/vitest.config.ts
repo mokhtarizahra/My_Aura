@@ -1,22 +1,27 @@
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import path from "path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: 'node', // محیط Node.js برای بک‌اند
+    environment: "node",
     globals: true,
-    include: [
-      'src/**/*.test.{ts,js}',
-      '*.test.{ts,js}'
-    ],
-    exclude: [
-      'node_modules',
-      'dist'
-    ],
+    setupFiles: "./src/test/setup.js",
+
+    env: {
+      NODE_ENV: "test",
+    },
+
+    hookTimeout: 60000,
+    testTimeout: 30000,
+    fileParallelism: false,
+
+    include: ["src/**/*.test.{ts,js}", "*.test.{ts,js}"],
+    exclude: ["node_modules", "dist"],
   },
+
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
 });

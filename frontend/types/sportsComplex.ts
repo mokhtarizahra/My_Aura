@@ -1,11 +1,10 @@
-
 // ─── Booking Types ───────────────────────────────────────────────────────────
-export type BookingType = "in-person" | "online" | "both";
+export type BookingType = 'in-person' | 'online' | 'both';
 
 // ─── Working Hours ───────────────────────────────────────────────────────────
 export interface WorkingHours {
-  day: DayOfWeek;  // ✅ فقط ID روز (نه کل آبجکت)
-  open: string;    // "HH:MM" 24-hour format
+  day: DayOfWeek; // ✅ فقط ID روز (نه کل آبجکت)
+  open: string; // "HH:MM" 24-hour format
   close: string;
   isOff: boolean;
 }
@@ -36,7 +35,7 @@ export interface Coach {
   experienceYears: number;
   sessionFee: number; // in Toman
   bookingType: BookingType;
-  availableDays: DayOfWeek[];  // ✅ فقط آرایه‌ای از IDها
+  availableDays: DayOfWeek[]; // ✅ فقط آرایه‌ای از IDها
 }
 
 // ─── Service ─────────────────────────────────────────────────────────────────
@@ -54,9 +53,9 @@ export interface Review {
   id: string;
   authorName: string;
   avatarUrl?: string;
-  rating: number;       // 1-5
+  rating: number; // 1-5
   comment: string;
-  createdAt: string;    // ISO 8601
+  createdAt: string; // ISO 8601
   isVerifiedMember: boolean;
 }
 
@@ -88,7 +87,7 @@ export interface SportsComplex {
   services: Service[];
   reviews: Review[];
   stats: SportsComplexStats;
-  minServicePrice: number; 
+  minServicePrice: number;
   isVerified: boolean;
   isFeatured: boolean;
   createdAt: string;
@@ -128,23 +127,23 @@ export interface CategoryDisplay {
 
 // ─── Sports Categories ────────────────────────────────────────────────────────
 export type SportsCategory =
-  | "football"
-  | "futsal"
-  | "swimming"
-  | "fitness"
-  | "basketball"
-  | "volleyball"
-  | "bodybuilding"
-  | "yoga"
-  | "pilates"
-  | "tennis"
-  | "martial-arts";
-  
-  export type DayOfWeek = 
-  | "saturday" 
-  | "sunday" 
-  | "monday" 
-  | "tuesday" 
-  | "wednesday" 
-  | "thursday" 
-  | "friday";
+  | 'football'
+  | 'futsal'
+  | 'swimming'
+  | 'fitness'
+  | 'basketball'
+  | 'volleyball'
+  | 'bodybuilding'
+  | 'yoga'
+  | 'pilates'
+  | 'tennis'
+  | 'martial-arts';
+
+export type DayOfWeek =
+  | 'saturday'
+  | 'sunday'
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday';
