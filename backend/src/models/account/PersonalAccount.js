@@ -13,16 +13,14 @@ const personalAccountSchema = new mongoose.Schema(
     phone: {
       type: String,
       trim: true,
-      index: true,
-      // Unique enforced via partial index below
+      // Index + uniqueness enforced via partial index below
     },
 
     email: {
       type: String,
       trim: true,
       lowercase: true,
-      index: true,
-      // Unique enforced via partial index below
+      // Index + uniqueness enforced via partial index below
     },
 
     passwordHash: {
